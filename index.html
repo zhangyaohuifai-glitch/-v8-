@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>西鐵小巴 v8.7.1 · 即刻靜音修復版</title>
+<title>西鐵小巴 v8.7.2 · 乘客路線圖修復</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -153,7 +153,7 @@ body {
 <body>
 
 <div class="header">
-  <div class="title">西鐵小巴 v8.7.1</div>
+  <div class="title">西鐵小巴 v8.7.2</div>
   <div class="dev-tag" id="dev-tag">開發者：大輝</div>
   <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
 </div>
@@ -207,6 +207,7 @@ body {
 <div id="view-passenger" class="view">
   <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
   <div class="card" id="pass-data-card">讀取中…</div>
+  <div class="route-strip" id="pass-route-strip"></div>
   <div class="msg-area">
     <div class="msg-list" id="pass-msg-list"></div>
     <div class="msg-row">
@@ -381,7 +382,7 @@ body {
 
   const state = {
     driver: { phone:'', plate:'', mode:'busy', idx:0, dirBusy:false, dirNormal:false, pass:0, max:16, full:false, gpsId:null, manualUntil:0 },
-    passenger: { name:'', tracking:'', voice:false, lastStation:'' },
+    passenger: { name:'', tracking:'', voice:false, lastStation:'', routeMode:'', direction:'', routeNodesBuilt: false },
     listeners: { driverMsg:null, passengerMsg:null, passengerBus:null, busList:null, announce:null, adminVehicles:null },
     recorder: null, audioChunks:[], recordTarget:'', recordTimer:null,
     speakQueue:[], speaking:false, iosUnlocked: false, globalMuted: localStorage.getItem('global_muted') === 'true',
@@ -421,7 +422,6 @@ body {
   const processQueue = () => {
     if (!state.speakQueue.length) { state.speaking=false; return; }
     
-    // 雙重保險：如果在隊列處理過程中被靜音了，直接停止
     if (state.globalMuted) {
       state.speakQueue = [];
       state.speaking = false;
@@ -860,6 +860,7 @@ body {
       }).join('');
       container.querySelectorAll('.track-btn').forEach(b=>b.addEventListener('click', function(){
         state.passenger.tracking = this.dataset.phone; state.passenger.lastStation = '';
+        state.passenger.routeNodesBuilt = false;
         showView('view-passenger'); updatePassengerView();
       }));
     };
@@ -878,10 +879,12 @@ body {
     state.listeners.passengerBus = snap => {
       const bus = snap.val(); if(!bus?.plate) return;
       const raw = bus.rawStationName||'', clean = cleanStation(raw);
+      
       if (raw !== state.passenger.lastStation) {
         if (state.passenger.voice) speak(`小巴 ${bus.plate} 駛至：${clean}。`+(bus.full?'滿座':''));
         state.passenger.lastStation = raw;
       }
+      
       document.getElementById('pass-data-card').innerHTML = `
         <div style="font-size:18px; color:#aaa;">更新: ${new Date(bus.ts).toLocaleTimeString()}</div>
         <span class="badge">${bus.routeMode}</span> <span class="badge badge-red">${bus.direction}</span>
@@ -889,8 +892,44 @@ body {
         <div class="big-number" style="font-size:48px;">${bus.passenger??0}</div>
         ${bus.full?'<div style="color:#ff453a;">⚠️ 滿座</div>':''}
         <div style="color:var(--gold);">車牌: ${bus.plate}</div>`;
+      
+      // 更新乘客端路線圖
+      updatePassengerRoute(bus);
     };
     activeRef.child(state.passenger.tracking).on('value', state.listeners.passengerBus);
+  };
+
+  // 乘客端路線圖更新
+  const updatePassengerRoute = (bus) => {
+    const routeStrip = document.getElementById('pass-route-strip');
+    const mode = bus.routeMode;
+    const direction = bus.direction;
+    
+    let stations = [];
+    if (mode === '繁忙時段') {
+      stations = direction.includes('大棠') ? [...BUSY].reverse() : BUSY;
+    } else {
+      stations = direction.includes('大棠') ? [...NORMAL].reverse() : NORMAL;
+    }
+    
+    const currentStation = cleanStation(bus.rawStationName || '');
+    
+    // 找到當前站點的索引
+    let currentIdx = stations.findIndex(s => cleanStation(s) === currentStation);
+    if (currentIdx === -1) currentIdx = 0;
+    
+    // 如果路線模式或方向改變，重新構建路線節點
+    if (!state.passenger.routeNodesBuilt || 
+        state.passenger.routeMode !== mode || 
+        state.passenger.direction !== direction) {
+      buildRouteNodes('pass-route-strip', stations);
+      state.passenger.routeNodesBuilt = true;
+      state.passenger.routeMode = mode;
+      state.passenger.direction = direction;
+    }
+    
+    // 更新站點狀態
+    updateRouteNodes('pass-route-strip', currentIdx, currentIdx + 1);
   };
 
   const loadAnnouncements = () => {
@@ -1005,13 +1044,12 @@ body {
       state.globalMuted = !state.globalMuted;
       localStorage.setItem('global_muted', state.globalMuted);
       
-      // 【核心修復】即刻靜音：強制中斷當前播放並清空隊列
       if (state.globalMuted) {
         if ('speechSynthesis' in window) {
-          speechSynthesis.cancel(); // 立即停止發聲
+          speechSynthesis.cancel();
         }
-        state.speakQueue = []; // 清空等待隊列
-        state.speaking = false; // 重置播放狀態
+        state.speakQueue = [];
+        state.speaking = false;
       }
       
       updateVoiceBtn();
