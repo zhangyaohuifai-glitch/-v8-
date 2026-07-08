@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>西鐵小巴 v8.7.0 · 總管後台整合版</title>
+<title>西鐵小巴 v8.7.1 · 即刻靜音修復版</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -153,7 +153,7 @@ body {
 <body>
 
 <div class="header">
-  <div class="title">西鐵小巴 v8.7.0</div>
+  <div class="title">西鐵小巴 v8.7.1</div>
   <div class="dev-tag" id="dev-tag">開發者：大輝</div>
   <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
 </div>
@@ -417,8 +417,17 @@ body {
     state.speakQueue.push({text,cb});
     if (!state.speaking) processQueue();
   };
+  
   const processQueue = () => {
     if (!state.speakQueue.length) { state.speaking=false; return; }
+    
+    // 雙重保險：如果在隊列處理過程中被靜音了，直接停止
+    if (state.globalMuted) {
+      state.speakQueue = [];
+      state.speaking = false;
+      return;
+    }
+    
     state.speaking=true;
     const {text,cb} = state.speakQueue.shift();
     const u = new SpeechSynthesisUtterance(text);
@@ -991,9 +1000,20 @@ body {
       }
     };
     updateVoiceBtn();
+    
     globalVoiceBtn.onclick = () => {
       state.globalMuted = !state.globalMuted;
       localStorage.setItem('global_muted', state.globalMuted);
+      
+      // 【核心修復】即刻靜音：強制中斷當前播放並清空隊列
+      if (state.globalMuted) {
+        if ('speechSynthesis' in window) {
+          speechSynthesis.cancel(); // 立即停止發聲
+        }
+        state.speakQueue = []; // 清空等待隊列
+        state.speaking = false; // 重置播放狀態
+      }
+      
       updateVoiceBtn();
       toast(state.globalMuted ? '🔇 全局靜音' : '🔊 全局語音已開啟');
     };
