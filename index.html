@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>西鐵小巴 v8.3.4 · 按掣即應修復</title>
-    <script src="https://cdn.bootcdn.net/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js">
-    </script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js">
-    </script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-    </script>
+    <title>西鐵小巴 v8.6.0 · 總管後台整合版</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg: #0f0f0f;
@@ -20,6 +17,7 @@
             --green: #30d158;
             --purple: #bf5af2;
             --radius: 18px;
+            --vh: 1vh;
         }
         * {
             box-sizing: border-box;
@@ -30,15 +28,12 @@
         body {
             background: var(--bg);
             color: #fff;
-            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             user-select: none;
-            -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
         }
         .header {
             padding: 10px;
@@ -91,10 +86,6 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            touch-action: manipulation;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .btn:active {
             opacity: 0.8;
@@ -172,12 +163,12 @@
             padding: 10px 0;
             border-top: 1px solid #333;
             margin-top: 8px;
-            -webkit-overflow-scrolling: touch;
         }
         .dot-node {
             flex: 0 0 100px;
             text-align: center;
             font-size: 14px;
+            transition: all 0.3s;
         }
         .dot {
             width: 28px;
@@ -186,6 +177,7 @@
             background: #444;
             margin: 0 auto 6px;
             border: 3px solid #555;
+            transition: all 0.3s;
         }
         .dot-node.active .dot {
             background: #30d158;
@@ -207,7 +199,6 @@
             overflow-y: auto;
             margin-bottom: 8px;
             font-size: 16px;
-            -webkit-overflow-scrolling: touch;
         }
         .msg-row {
             display: flex;
@@ -225,8 +216,6 @@
             font-size: 18px;
             background: #2c2c2e;
             color: #fff;
-            -webkit-user-select: text;
-            user-select: text;
         }
         .record-btn,
         .send-btn {
@@ -241,10 +230,6 @@
             transition: 0.2s;
             position: relative;
             flex-shrink: 0;
-            touch-action: manipulation;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .record-btn {
             background: #ff9f0a;
@@ -283,7 +268,6 @@
             padding: 2px 6px;
             font-size: 10px;
             display: none;
-            pointer-events: none;
         }
         .record-btn.recording .record-timer {
             display: block;
@@ -319,8 +303,6 @@
             font-size: 20px;
             box-shadow: 0 4px 18px rgba(255, 204, 0, 0.4);
             z-index: 10;
-            touch-action: manipulation;
-            -webkit-touch-callout: none;
         }
         .driver-scroll-container {
             height: 100%;
@@ -344,38 +326,44 @@
             flex: 1;
             overflow-y: auto;
             padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch;
         }
-
-        /* 防止录音按钮上的长按菜单和文本选择 */
-        .record-btn {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            user-select: none !important;
-            touch-action: manipulation !important;
-            -webkit-tap-highlight-color: transparent !important;
-        }
-        .record-btn * {
-            pointer-events: none;
-        }
-
-        /* 播放按钮 */
         .play-audio {
-            background: var(--gold);
-            color: #000;
+            background: var(--blue);
+            color: #fff;
             border: none;
-            border-radius: 6px;
             padding: 4px 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            touch-action: manipulation;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .stat-num {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="title">西鐵小巴 v8.3.4</div>
-        <div class="dev-tag" id="dev-tag">開發者：大輝</div>
+        <div class="title">西鐵小巴 v8.6.0</div>
+        <div class="dev-tag" id="dev-tag">開發者：大輝 (總管後台已整合)</div>
     </div>
 
     <!-- 大堂 -->
@@ -388,7 +376,8 @@
             <div style="margin-top:10px; color:#ccc; line-height:1.6;">
                 🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
                 🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-                🎤 <b>長按錄音</b> 可發送語音訊息（按住即錄，放手即發）
+                🎤 <b>長按錄音</b> 可發送語音訊息<br>
+                🔐 <b>總管後台</b>：連續點擊「開發者」標籤 5 次
             </div>
         </div>
         <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
@@ -504,7 +493,6 @@
                 <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
             </div>
         </div>
-
         <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
     </div>
 
@@ -523,10 +511,48 @@
         <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
     </div>
 
+    <!-- 總管後台 -->
+    <div id="view-admin" class="view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="color:var(--gold);">🛡️ 總管後台</h2>
+            <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="btn-admin-logout">返回大堂</button>
+        </div>
+
+        <div class="admin-stats" id="admin-stats">
+            <div class="stat-card"><div class="stat-num" id="stat-online">0</div><div class="stat-label">在線車輛</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-passengers">0</div><div class="stat-label">總乘客數</div></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:8px;">📢 全局公告</h3>
+            <div class="row">
+                <input id="admin-announce-input" class="msg-input" placeholder="輸入公告內容">
+                <button class="btn btn-green" id="btn-publish-announce" style="width:auto; padding:10px 20px;">發佈</button>
+            </div>
+            <button class="btn btn-red" id="btn-clear-announce">清除公告</button>
+            <div style="margin-top:8px; color:#aaa;">目前公告：<span id="current-announce-text">無</span></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:12px;">🚍 在線車輛管理</h3>
+            <div id="admin-bus-list">載入中...</div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:8px;">🧹 系統維護</h3>
+            <button class="btn btn-warn" id="btn-clean-messages">清理所有過期訊息 (7天外)</button>
+            <p style="margin-top:8px; color:#aaa; font-size:14px;">此操作將遍歷所有訊息節點並刪除超過7天的記錄，不可撤銷。</p>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script>
         (function() {
+            const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+            setVh();
+            window.addEventListener('resize', setVh);
+
             firebase.initializeApp({
                 apiKey: "AIzaSyAFcVQgfloxuzYeoHg7wgiKLfen1W3RaEk",
                 authDomain: "vanv6-c5bab.firebaseapp.com",
@@ -538,103 +564,99 @@
             const msgRef = db.ref("van/messages");
             const announceRef = db.ref("van/announcements");
 
-            const BUSY = ["大棠黃泥墩", "大棠山路", "大棠村迴旋處", "水蕉新村", "曉門", "南坑排", "南坑村", "紅棗田", "崇正公立學校", "深涌村", "禮修村公廁",
-                "蝶翠峰", "富達廣場", "合益路", "鳳翔路", "元朗站H出口（朗明街）"
-            ];
-            const NORMAL = ["大棠黃泥墩", "大棠山路", "大棠村迴旋處", "水蕉新村", "曉門", "南坑排", "南坑村", "紅棗田", "崇正公立學校", "深涌村", "禮修村公廁",
-                "蝶翠峰", "富達廣場", "教育路麥當勞", "鄉議局中學", "大球場", "元朗廣場", "余仁生（大馬路）", "家居站", "元朗站H出口（朗明街）", "鳳翔路", "合益路",
-                "富達廣場(回程)", "蝶翠峰(回程)", "禮修村公廁(回程)", "深涌村(回程)", "崇正公立學校(回程)", "紅棗田(回程)", "南坑村(回程)", "南坑排(回程)",
-                "曉門(回程)", "水蕉新村(回程)", "大棠村迴旋處(回程)", "大棠山路(回程)", "大棠黃泥墩(終點站)"
-            ];
-            const COORDS_BUSY = [{ lat: 22.416277, lng: 114.021894 }, { lat: 22.416252, lng: 114.024020 }, { lat: 22.418172, lng: 114.025328 },
-                { lat: 22.422033, lng: 114.028292 }, { lat: 22.422488, lng: 114.029555 }, { lat: 22.422697, lng: 114.030932 },
-                { lat: 22.423627, lng: 114.032177 }, { lat: 22.425730, lng: 114.031150 }, { lat: 22.429900, lng: 114.028588 },
-                { lat: 22.433535, lng: 114.028572 }, { lat: 22.435330, lng: 114.028650 }, { lat: 22.437075, lng: 114.029522 },
-                { lat: 22.441063, lng: 114.029452 }, { lat: 22.441865, lng: 114.030613 }, { lat: 22.441895, lng: 114.032175 },
-                { lat: 22.445882, lng: 114.036110 }
-            ];
-            const COORDS_NORMAL = [{ lat: 22.416277, lng: 114.021894 }, { lat: 22.416252, lng: 114.024020 }, { lat: 22.418172,
-                    lng: 114.025328 }, { lat: 22.422033, lng: 114.028292 }, { lat: 22.422488, lng: 114.029555 },
-                { lat: 22.422697, lng: 114.030932 }, { lat: 22.423627, lng: 114.032177 }, { lat: 22.425730, lng: 114.031150 },
-                { lat: 22.429900, lng: 114.028588 }, { lat: 22.433535, lng: 114.028572 }, { lat: 22.435330, lng: 114.028650 },
-                { lat: 22.437075, lng: 114.029522 }, { lat: 22.441063, lng: 114.029452 }, { lat: 22.443030, lng: 114.027818 },
-                { lat: 22.443048, lng: 114.025135 }, { lat: 22.443182, lng: 114.022137 }, { lat: 22.444632, lng: 114.023758 },
-                { lat: 22.444547, lng: 114.027602 }, { lat: 22.444520, lng: 114.030492 }, { lat: 22.445882, lng: 114.036110 },
-                { lat: 22.441895, lng: 114.032175 }, { lat: 22.441865, lng: 114.030613 }, { lat: 22.441063, lng: 114.029452 },
-                { lat: 22.437075, lng: 114.029522 }, { lat: 22.435330, lng: 114.028650 }, { lat: 22.433535, lng: 114.028572 },
-                { lat: 22.429900, lng: 114.028588 }, { lat: 22.425730, lng: 114.031150 }, { lat: 22.423627, lng: 114.032177 },
-                { lat: 22.422697, lng: 114.030932 }, { lat: 22.422488, lng: 114.029555 }, { lat: 22.422033, lng: 114.028292 },
-                { lat: 22.418172, lng: 114.025328 }, { lat: 22.416252, lng: 114.024020 }, { lat: 22.416277, lng: 114.021894 }
-            ];
+            const ROUTES = {
+                busy: [
+                    { name: '大棠黃泥墩', lat: 22.416277, lng: 114.021894 },
+                    { name: '大棠山路', lat: 22.416252, lng: 114.024020 },
+                    { name: '大棠村迴旋處', lat: 22.418172, lng: 114.025328 },
+                    { name: '水蕉新村', lat: 22.422033, lng: 114.028292 },
+                    { name: '曉門', lat: 22.422488, lng: 114.029555 },
+                    { name: '南坑排', lat: 22.422697, lng: 114.030932 },
+                    { name: '南坑村', lat: 22.423627, lng: 114.032177 },
+                    { name: '紅棗田', lat: 22.425730, lng: 114.031150 },
+                    { name: '崇正公立學校', lat: 22.429900, lng: 114.028588 },
+                    { name: '深涌村', lat: 22.433535, lng: 114.028572 },
+                    { name: '禮修村公廁', lat: 22.435330, lng: 114.028650 },
+                    { name: '蝶翠峰', lat: 22.437075, lng: 114.029522 },
+                    { name: '富達廣場', lat: 22.441063, lng: 114.029452 },
+                    { name: '合益路', lat: 22.441865, lng: 114.030613 },
+                    { name: '鳳翔路', lat: 22.441895, lng: 114.032175 },
+                    { name: '元朗站H出口（朗明街）', lat: 22.445882, lng: 114.036110 }
+                ],
+                normal: [
+                    { name: '大棠黃泥墩', lat: 22.416277, lng: 114.021894 },
+                    { name: '大棠山路', lat: 22.416252, lng: 114.024020 },
+                    { name: '大棠村迴旋處', lat: 22.418172, lng: 114.025328 },
+                    { name: '水蕉新村', lat: 22.422033, lng: 114.028292 },
+                    { name: '曉門', lat: 22.422488, lng: 114.029555 },
+                    { name: '南坑排', lat: 22.422697, lng: 114.030932 },
+                    { name: '南坑村', lat: 22.423627, lng: 114.032177 },
+                    { name: '紅棗田', lat: 22.425730, lng: 114.031150 },
+                    { name: '崇正公立學校', lat: 22.429900, lng: 114.028588 },
+                    { name: '深涌村', lat: 22.433535, lng: 114.028572 },
+                    { name: '禮修村公廁', lat: 22.435330, lng: 114.028650 },
+                    { name: '蝶翠峰', lat: 22.437075, lng: 114.029522 },
+                    { name: '富達廣場', lat: 22.441063, lng: 114.029452 },
+                    { name: '教育路麥當勞', lat: 22.443030, lng: 114.027818 },
+                    { name: '鄉議局中學', lat: 22.443048, lng: 114.025135 },
+                    { name: '大球場', lat: 22.443182, lng: 114.022137 },
+                    { name: '元朗廣場', lat: 22.444632, lng: 114.023758 },
+                    { name: '余仁生（大馬路）', lat: 22.444547, lng: 114.027602 },
+                    { name: '家居站', lat: 22.444520, lng: 114.030492 },
+                    { name: '元朗站H出口（朗明街）', lat: 22.445882, lng: 114.036110 },
+                    { name: '鳳翔路', lat: 22.441895, lng: 114.032175 },
+                    { name: '合益路', lat: 22.441865, lng: 114.030613 },
+                    { name: '富達廣場(回程)', lat: 22.441063, lng: 114.029452 },
+                    { name: '蝶翠峰(回程)', lat: 22.437075, lng: 114.029522 },
+                    { name: '禮修村公廁(回程)', lat: 22.435330, lng: 114.028650 },
+                    { name: '深涌村(回程)', lat: 22.433535, lng: 114.028572 },
+                    { name: '崇正公立學校(回程)', lat: 22.429900, lng: 114.028588 },
+                    { name: '紅棗田(回程)', lat: 22.425730, lng: 114.031150 },
+                    { name: '南坑村(回程)', lat: 22.423627, lng: 114.032177 },
+                    { name: '南坑排(回程)', lat: 22.422697, lng: 114.030932 },
+                    { name: '曉門(回程)', lat: 22.422488, lng: 114.029555 },
+                    { name: '水蕉新村(回程)', lat: 22.422033, lng: 114.028292 },
+                    { name: '大棠村迴旋處(回程)', lat: 22.418172, lng: 114.025328 },
+                    { name: '大棠山路(回程)', lat: 22.416252, lng: 114.024020 },
+                    { name: '大棠黃泥墩(終點站)', lat: 22.416277, lng: 114.021894 }
+                ]
+            };
+
+            function getEffectiveRoute() {
+                const mode = state.driver.mode;
+                const dir = (mode === 'busy') ? state.driver.dirBusy : state.driver.dirNormal;
+                const base = ROUTES[mode];
+                return dir ? [...base].reverse() : base;
+            }
+
+            const cleanStationName = (name) => name.replace('(回程)', '').replace('(終點站)', '');
+            const calcDistance = (lat1, lon1, lat2, lon2) => {
+                const p = Math.PI / 180;
+                const a = Math.sin((lat2 - lat1) * p / 2) ** 2 +
+                    Math.cos(lat1 * p) * Math.cos(lat2 * p) * Math.sin((lon2 - lon1) * p / 2) ** 2;
+                return 6371e3 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            };
 
             const state = {
                 driver: { phone: '', plate: '', mode: 'busy', idx: 0, dirBusy: false, dirNormal: false, pass: 0, max: 16,
                     full: false, gpsId: null, manualUntil: 0 },
                 passenger: { name: '', tracking: '', voice: false, lastStation: '' },
-                msgListeners: { driverChild: null, passenger: null },
-                recorder: null,
-                audioChunks: [],
-                recordTarget: '',
-                recordTimer: null,
-                recordingIntent: false,
+                ui: { layout: (localStorage.getItem('van_layout_v86') || 'new'), view: 'lobby' },
+                gps: { confirmIdx: -1, confirmCnt: 0 },
+                recorder: { instance: null, audioChunks: [], target: '', timer: null },
                 speakQueue: [],
                 speaking: false,
-                busListListener: null,
-                gpsConfirmIdx: -1,
-                gpsConfirmCnt: 0,
-                useNewLayout: (localStorage.getItem('van_layout_v83') || 'new') === 'new',
+                iosUnlocked: false,
+                listeners: { busList: null, passengerMsg: null, passengerBus: null, driverMsg: null,
+                oldAutoScroll: null },
                 oldIdleTimer: null,
                 autoReturnEnabled: true,
-                oldResetIdleTimer: null,
                 guideToggle: true,
-                iosSpeechReady: false
+                routeNodesBuilt: { new: false, old: false },
+                adminAuthenticated: false
             };
 
-            const getStations = () => state.driver.mode === 'busy' ? (state.driver.dirBusy ? [...BUSY].reverse() : BUSY) : (
-                state.driver.dirNormal ? [...NORMAL].reverse() : NORMAL);
-            const getCoords = () => state.driver.mode === 'busy' ? (state.driver.dirBusy ? [...COORDS_BUSY].reverse() :
-                COORDS_BUSY) : (state.driver.dirNormal ? [...COORDS_NORMAL].reverse() : COORDS_NORMAL);
-            const dist = (lat1, lon1, lat2, lon2) => {
-                const p = Math.PI / 180,
-                    a = Math.sin((lat2 - lat1) * p / 2) ** 2 + Math.cos(lat1 * p) * Math.cos(lat2 * p) * Math.sin((lon2 -
-                        lon1) * p / 2) ** 2;
-                return 6371e3 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            };
-            const cleanStation = s => s.replace('(回程)', '').replace('(終點站)', '');
-            const speak = (text, cb) => {
-                if (!('speechSynthesis' in window)) { if (cb) cb(); return; }
-                // iOS 語音預熱
-                if (!state.iosSpeechReady) {
-                    state.iosSpeechReady = true;
-                    speechSynthesis.cancel();
-                    const warmUp = new SpeechSynthesisUtterance('');
-                    warmUp.volume = 0;
-                    warmUp.rate = 1;
-                    speechSynthesis.speak(warmUp);
-                }
-                state.speakQueue.push({ text, cb });
-                if (!state.speaking) processQueue();
-            };
-            const processQueue = () => {
-                if (!state.speakQueue.length) { state.speaking = false; return; }
-                state.speaking = true;
-                const { text, cb } = state.speakQueue.shift();
-                // 取消之前的語音以確保iOS上能播放
-                speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'zh-HK';
-                u.rate = 0.9;
-                u.volume = 1;
-                u.onend = () => { if (cb) cb();
-                    processQueue(); };
-                u.onerror = () => {
-                    console.warn('Speech error for:', text);
-                    processQueue();
-                };
-                // 短延遲以確保cancel完成
-                setTimeout(() => speechSynthesis.speak(u), 50);
-            };
-            const toast = msg => {
+            const toast = (msg) => {
                 const t = document.getElementById('toast');
                 t.textContent = msg;
                 t.classList.add('show');
@@ -642,572 +664,367 @@
                 window._toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
             };
 
-            const showView = id => {
+            const showView = (viewId) => {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
+                document.getElementById(viewId).classList.add('active');
+                state.ui.view = viewId;
             };
 
-            const updateAllDriverMessages = snap => {
-                renderMessages(snap, 'driver-msg-list-overlay');
-                renderMessages(snap, 'driver-msg-list-old');
+            const speak = (text, callback) => {
+                if (!('speechSynthesis' in window)) { if (callback) callback(); return; }
+                state.speakQueue.push({ text, callback });
+                if (!state.speaking) processSpeechQueue();
             };
-            const renderMessages = (snap, elId) => {
-                const data = snap.val(),
-                    list = document.getElementById(elId);
-                if (!list) return;
-                list.innerHTML = '';
+
+            const processSpeechQueue = () => {
+                if (!state.speakQueue.length) { state.speaking = false; return; }
+                state.speaking = true;
+                const { text, callback } = state.speakQueue.shift();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-HK';
+                utterance.rate = 0.9;
+                utterance.onend = () => { if (callback) callback();
+                    processSpeechQueue(); };
+                utterance.onerror = () => processSpeechQueue();
+                speechSynthesis.speak(utterance);
+            };
+
+            const unlockIosSpeech = () => {
+                if (!state.iosUnlocked && 'speechSynthesis' in window) {
+                    const u = new SpeechSynthesisUtterance(' ');
+                    u.volume = 0;
+                    speechSynthesis.speak(u);
+                    state.iosUnlocked = true;
+                }
+            };
+
+            const renderMessages = (snap, listElement) => {
+                const data = snap.val();
+                listElement.innerHTML = '';
                 if (!data) return;
-                const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000,
-                    updates = {};
-                Object.entries(data).forEach(([k, m]) => {
-                    if (m.ts < cutoff) { updates[k] = null; return; }
+                const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                const updates = {};
+                Object.entries(data).forEach(([key, msg]) => {
+                    if (msg.ts < cutoff) { updates[key] = null; return; }
                     const div = document.createElement('div');
-                    const time = new Date(m.ts).toLocaleTimeString('zh-HK', { hour: '2-digit',
-                        minute: '2-digit' });
-                    if (m.type === 'audio') div.innerHTML =
-                        `[${m.from}] 🎤 <button class="play-audio" data-audio="${m.audioData}">▶️ 播放</button> <small>${time}</small>`;
-                    else div.textContent = `[${m.from}] ${m.text}  ${time}`;
-                    list.appendChild(div);
+                    div.style.marginBottom = '8px';
+                    const fromSpan = document.createElement('span');
+                    fromSpan.textContent = `[${msg.from}] `;
+                    fromSpan.style.fontWeight = 'bold';
+                    div.appendChild(fromSpan);
+                    if (msg.type === 'audio') {
+                        const btn = document.createElement('button');
+                        btn.className = 'play-audio';
+                        btn.textContent = '▶️ 語音';
+                        btn.onclick = () => new Audio('data:audio/webm;base64,' + msg.audioData).play().catch(e => toast(
+                            '⚠️ 無法播放語音'));
+                        div.appendChild(btn);
+                    } else {
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = msg.text;
+                        div.appendChild(textSpan);
+                    }
+                    const timeSpan = document.createElement('small');
+                    timeSpan.textContent =
+                        ` ${new Date(msg.ts).toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })}`;
+                    timeSpan.style.color = '#888';
+                    timeSpan.style.marginLeft = '8px';
+                    div.appendChild(timeSpan);
+                    listElement.appendChild(div);
                 });
-                list.querySelectorAll('.play-audio').forEach(b => b.addEventListener('click', function() {
-                    const audio = new Audio('data:audio/webm;base64,' + this.dataset.audio);
-                    audio.play().catch(e => toast('⚠️ 無法播放音頻'));
-                }));
-                list.scrollTop = list.scrollHeight;
+                listElement.scrollTop = listElement.scrollHeight;
                 if (Object.keys(updates).length) snap.ref.update(updates);
             };
 
-            const getMime = () => ['audio/webm', 'audio/mp4', 'audio/ogg; codecs=opus'].find(m => MediaRecorder
+            const getSupportedMimeType = () => ['audio/webm', 'audio/mp4', 'audio/ogg; codecs=opus'].find(m => MediaRecorder
                 .isTypeSupported(m)) || '';
 
-            const startRec = async (target, timerId) => {
-                if (state.recorder?.state === 'recording') return;
-                state.recordingIntent = true;
+            const startRecording = async (target, timerElementId) => {
+                if (state.recorder.instance && state.recorder.instance.state === 'recording') return;
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    // 檢查用戶是否已經鬆手
-                    if (!state.recordingIntent) {
-                        stream.getTracks().forEach(t => t.stop());
-                        return;
-                    }
-                    const mime = getMime();
-                    state.recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-                    state.audioChunks = [];
-                    state.recordTarget = target;
-                    state.recorder.ondataavailable = e => { if (e.data.size) state.audioChunks.push(e.data); };
-                    state.recorder.onstop = () => {
-                        clearInterval(state.recordTimer);
-                        if (!state.audioChunks.length) { stream.getTracks().forEach(t => t.stop()); return; }
-                        const blob = new Blob(state.audioChunks, { type: state.recorder.mimeType ||
+                    const mimeType = getSupportedMimeType();
+                    state.recorder.instance = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+                    state.recorder.audioChunks = [];
+                    state.recorder.target = target;
+                    state.recorder.instance.ondataavailable = e => { if (e.data.size) state.recorder.audioChunks.push(e
+                            .data); };
+                    state.recorder.instance.onstop = () => {
+                        clearInterval(state.recorder.timer);
+                        if (!state.recorder.audioChunks.length) return;
+                        const blob = new Blob(state.recorder.audioChunks, { type: state.recorder.instance.mimeType ||
                                 'audio/webm' });
                         const reader = new FileReader();
                         reader.onloadend = () => {
-                            const b64 = reader.result.split(',')[1];
-                            const ref = target === 'driver' ? msgRef.child(state.driver.phone) : msgRef
-                                .child(state.passenger.tracking);
+                            const base64 = reader.result.split(',')[1];
+                            const refPath = target === 'driver' ? msgRef.child(state.driver.phone) : msgRef.child(
+                                state.passenger.tracking);
                             const from = target === 'driver' ? `司機${state.driver.plate}` :
                                 `乘客:${state.passenger.name}`;
-                            ref.push({ from, type: 'audio', audioData: b64, ts: Date.now() });
+                            refPath.push({ from, type: 'audio', audioData: base64, ts: Date.now() }).catch(e => toast(
+                                '⚠️ 發送失敗'));
                         };
                         reader.readAsDataURL(blob);
                         stream.getTracks().forEach(t => t.stop());
                     };
-                    state.recorder.start(1000);
+                    state.recorder.instance.start(1000);
                     if (navigator.vibrate) navigator.vibrate(50);
                     let sec = 0;
-                    document.getElementById(timerId).textContent = '0s';
-                    clearInterval(state.recordTimer);
-                    state.recordTimer = setInterval(() => {
-                        sec++;
-                        const timerEl = document.getElementById(timerId);
-                        if (timerEl) timerEl.textContent = sec + 's';
-                        if (sec >= 25 && navigator.vibrate) navigator.vibrate(30);
-                        if (sec >= 30) stopRec(timerId);
-                    }, 1000);
-                } catch (e) {
-                    console.warn('錄音失敗:', e);
-                    state.recordingIntent = false;
-                    toast('❌ 錄音失敗，請允許麥克風權限');
-                }
+                    document.getElementById(timerElementId).textContent = '0s';
+                    state.recorder.timer = setInterval(() => { sec++;
+                        document.getElementById(timerElementId).textContent = sec + 's'; if (sec >= 25 && navigator
+                            .vibrate) navigator.vibrate(30); if (sec >= 30) stopRecording(timerElementId); }, 1000);
+                } catch (err) { toast('❌ 錄音權限未開啟或設備不支持'); }
             };
 
-            const stopRec = (timerId) => {
-                state.recordingIntent = false;
-                if (state.recorder?.state === 'recording') {
-                    try { state.recorder.stop(); } catch (e) { console.warn('stopRec error:', e); }
-                }
-                clearInterval(state.recordTimer);
-                state.recordTimer = null;
-                if (timerId) {
-                    const timerEl = document.getElementById(timerId);
-                    if (timerEl) timerEl.textContent = '0s';
-                }
+            const stopRecording = (timerElementId) => {
+                if (state.recorder.instance && state.recorder.instance.state === 'recording') state.recorder.instance
+                .stop();
+                clearInterval(state.recorder.timer);
+                if (timerElementId) document.getElementById(timerElementId).textContent = '0s';
             };
 
-            // ========== 修復後的錄音按鈕綁定（核心修復） ==========
-            const setupRecBtn = (btnId, target, timerId) => {
+            const setupRecordButton = (btnId, target, timerId) => {
                 const btn = document.getElementById(btnId);
-                if (!btn) return;
-
-                let localRecording = false;
-
-                const startHandler = (e) => {
-                    if (localRecording) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    localRecording = true;
+                let isDown = false;
+                const start = (e) => { e.preventDefault(); if (isDown) return;
+                    isDown = true;
                     btn.classList.add('recording');
-                    // 防止頁面滾動
-                    if (e.type === 'touchstart') {
-                        document.body.style.overflow = 'hidden';
-                    }
-                    startRec(target, timerId);
-                };
-
-                const stopHandler = (e) => {
-                    if (!localRecording) return;
-                    e.preventDefault();
-                    localRecording = false;
+                    startRecording(target, timerId); };
+                const stop = () => { if (!isDown) return;
+                    isDown = false;
                     btn.classList.remove('recording');
-                    document.body.style.overflow = '';
-                    stopRec(timerId);
-                };
-
-                // 使用 touchstart 作為主要事件（移動端即時響應）
-                btn.addEventListener('touchstart', startHandler, { passive: false });
-                // pointerdown 作為桌面端後備
-                btn.addEventListener('pointerdown', function(e) {
-                    // 如果已經通過 touchstart 觸發，則跳過
-                    if (localRecording) return;
-                    startHandler(e);
-                });
-
-                // 在 document 上監聽鬆手事件（確保手指滑出按鈕後也能停止）
-                const docStopHandler = (e) => {
-                    if (!localRecording) return;
-                    // 檢查事件是否與當前按鈕相關
-                    stopHandler(e);
-                };
-                document.addEventListener('touchend', docStopHandler, { passive: false });
-                document.addEventListener('touchcancel', docStopHandler, { passive: false });
-                document.addEventListener('pointerup', docStopHandler);
-                document.addEventListener('pointercancel', docStopHandler);
-
-                // 阻止長按彈出選單
-                btn.addEventListener('contextmenu', e => {
-                    if (localRecording) e.preventDefault();
-                });
-
-                // 防止錄音結束後觸發click事件
-                btn.addEventListener('click', function(e) {
-                    if (localRecording) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        stopHandler(e);
-                    }
-                });
-
-                // 存儲清理函數的引用（用於可能的卸載）
-                btn._recCleanup = () => {
-                    document.removeEventListener('touchend', docStopHandler);
-                    document.removeEventListener('touchcancel', docStopHandler);
-                    document.removeEventListener('pointerup', docStopHandler);
-                    document.removeEventListener('pointercancel', docStopHandler);
-                };
+                    stopRecording(timerId); };
+                btn.addEventListener('pointerdown', start);
+                document.addEventListener('pointerup', stop);
+                document.addEventListener('pointercancel', stop);
             };
 
-            // ========== GPS 系統 ==========
             const GPS_DIST_THRESHOLD = 120;
             const startGps = () => {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) { toast('❌ 此設備不支援GPS'); return; }
                 if (state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId);
                 state.driver.manualUntil = 0;
-                state.gpsConfirmIdx = -1;
-                state.gpsConfirmCnt = 0;
-
-                const processPos = pos => {
+                state.gps.confirmIdx = -1;
+                state.gps.confirmCnt = 0;
+                const processPosition = (pos) => {
                     const isManualCooldown = Date.now() < state.driver.manualUntil;
-                    const coords = getCoords();
-                    const list = getStations();
-                    if (state.driver.idx + 1 < coords.length) {
-                        const dNext = dist(pos.coords.latitude, pos.coords.longitude, coords[state.driver.idx + 1]
-                            .lat, coords[state.driver.idx + 1].lng);
-                        const distEl = state.useNewLayout ? null : document.getElementById('d-distance-old');
-                        if (distEl) distEl.innerHTML =
+                    const route = getEffectiveRoute();
+                    if (state.driver.idx + 1 < route.length) {
+                        const nextCoord = route[state.driver.idx + 1];
+                        const dNext = calcDistance(pos.coords.latitude, pos.coords.longitude, nextCoord.lat, nextCoord
+                        .lng);
+                        const distEl = document.getElementById('d-distance-old');
+                        if (distEl && state.ui.layout === 'old') distEl.innerHTML =
                             `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}<br>距下一站: ${Math.round(dNext)} 米`;
                     }
                     if (isManualCooldown) return;
-
-                    let found = -1;
-                    for (let i = state.driver.idx; i < coords.length; i++) {
-                        const d = dist(pos.coords.latitude, pos.coords.longitude, coords[i].lat, coords[i].lng);
-                        if (d < GPS_DIST_THRESHOLD) { found = i; break; }
+                    let foundIdx = -1;
+                    for (let i = state.driver.idx; i < route.length; i++) {
+                        const d = calcDistance(pos.coords.latitude, pos.coords.longitude, route[i].lat, route[i].lng);
+                        if (d < GPS_DIST_THRESHOLD) { foundIdx = i; break; }
                     }
-                    if (found > state.driver.idx) {
-                        if (found === state.gpsConfirmIdx) {
-                            state.gpsConfirmCnt++;
-                        } else {
-                            state.gpsConfirmIdx = found;
-                            state.gpsConfirmCnt = 1;
-                        }
-                        const triggerNow = (state.gpsConfirmCnt >= 2) ||
-                            (found > state.driver.idx + 1) ||
-                            (dist(pos.coords.latitude, pos.coords.longitude, coords[found].lat, coords[found].lng) <
-                                80);
+                    if (foundIdx > state.driver.idx) {
+                        if (foundIdx === state.gps.confirmIdx) state.gps.confirmCnt++;
+                        else { state.gps.confirmIdx = foundIdx;
+                            state.gps.confirmCnt = 1; }
+                        const dToFound = calcDistance(pos.coords.latitude, pos.coords.longitude, route[foundIdx].lat,
+                            route[foundIdx].lng);
+                        const triggerNow = (state.gps.confirmCnt >= 2) || (foundIdx > state.driver.idx + 1) || (
+                            dToFound < 80);
                         if (triggerNow) {
-                            if (found > state.driver.idx + 1) {
-                                state.driver.idx = found;
-                            } else {
-                                state.driver.idx = found;
-                            }
-                            const cur = cleanStation(list[state.driver.idx]);
-                            const nxt = state.driver.idx + 1 < list.length ? cleanStation(list[state.driver.idx + 1]) :
-                                null;
-                            speak(`即將到達：${cur}`, () => {
-                                if (nxt) setTimeout(() => speak(`下一站：${nxt}`), 2000);
-                            });
+                            state.driver.idx = foundIdx;
+                            const cur = cleanStationName(route[state.driver.idx].name);
+                            const nxt = state.driver.idx + 1 < route.length ? cleanStationName(route[state.driver.idx +
+                                1].name) : null;
+                            speak(`即將到達：${cur}`, () => { if (nxt) setTimeout(() => speak(`下一站：${nxt}`),
+                                2000); });
                             refreshDriverUI();
-                            state.gpsConfirmIdx = -1;
-                            state.gpsConfirmCnt = 0;
-                            if (state.driver.idx >= list.length - 1) {
-                                autoReverse();
-                            }
+                            state.gps.confirmIdx = -1;
+                            state.gps.confirmCnt = 0;
+                            if (state.driver.idx >= route.length - 1) autoReverse();
                         }
-                    } else {
-                        state.gpsConfirmIdx = -1;
-                        state.gpsConfirmCnt = 0;
-                    }
+                    } else { state.gps.confirmIdx = -1;
+                        state.gps.confirmCnt = 0; }
                 };
-
-                state.driver.gpsId = navigator.geolocation.watchPosition(
-                    processPos,
-                    err => {
-                        console.warn('GPS error:', err);
-                        const distEl = state.useNewLayout ? null : document.getElementById('d-distance-old');
-                        if (distEl) distEl.innerHTML = '⚠️ GPS 訊號不穩定';
-                    }, {
-                        enableHighAccuracy: true,
-                        maximumAge: 0,
-                        timeout: 5000
-                    }
-                );
+                state.driver.gpsId = navigator.geolocation.watchPosition(processPosition, (err) => {
+                    let msg = '⚠️ GPS 訊號不穩定';
+                    if (err.code === 1) msg = '❌ GPS 權限被拒絕';
+                    const distEl = document.getElementById('d-distance-old');
+                    if (distEl && state.ui.layout === 'old') distEl.innerHTML = msg;
+                    else toast(msg);
+                }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
             };
+
+            const stopGps = () => {
+                if (state.driver.gpsId) { navigator.geolocation.clearWatch(state.driver.gpsId);
+                    state.driver.gpsId = null; }
+                activeRef.child(state.driver.phone).remove().catch(() => {});
+            };
+
             const autoReverse = () => {
                 if (state.driver.mode === 'busy') state.driver.dirBusy = !state.driver.dirBusy;
                 else state.driver.dirNormal = !state.driver.dirNormal;
                 state.driver.idx = 0;
                 state.driver.pass = 0;
                 state.driver.full = false;
-                state.gpsConfirmIdx = -1;
-                state.gpsConfirmCnt = 0;
+                state.gps.confirmIdx = -1;
+                state.gps.confirmCnt = 0;
                 refreshDriverUI();
                 speak('已到達終點站，方向已自動切換，乘客數已清零');
             };
 
-            // ========== UI 刷新 ==========
-            const refreshNewUI = async (upload) => {
-                const st = state.driver,
-                    list = getStations(),
-                    now = cleanStation(list[st.idx]);
-                const next = st.idx + 1 < list.length ? cleanStation(list[st.idx + 1]) : '終點站';
-                document.getElementById('d-info-new').textContent = `手機: ${st.phone||'未登入'} | 車牌: ${st.plate||'-'}`;
-                document.getElementById('d-mode-badge-new').textContent = st.mode === 'busy' ? '繁忙時段' : '非繁忙';
-                document.getElementById('d-mode-badge-new').className = 'badge badge-purple';
-                const dirText = st.mode === 'busy' ? (st.dirBusy ? '往大棠' : '往元朗') : (st.dirNormal ? '逆行' : '順行');
-                document.getElementById('d-dir-badge-new').textContent = dirText;
-                document.getElementById('d-dir-badge-new').className = (st.mode === 'busy' && st.dirBusy) || (st.mode ===
-                    'normal' && st.dirNormal) ? 'badge badge-blue' : 'badge badge-red';
-                document.getElementById('d-station-new').textContent = now;
-                document.getElementById('d-target-new').textContent = `下一站：${next}`;
-                document.getElementById('d-pass-count-new').textContent = st.pass;
-                const fullBtn = document.getElementById('d-full-btn-new');
-                if (st.full) { fullBtn.textContent = '取消滿座';
-                    fullBtn.className = 'btn btn-red'; } else { fullBtn.textContent = '標記滿座';
-                    fullBtn.className = 'btn btn-green'; }
-                document.getElementById('d-car-btn-new').textContent = st.max + '座';
-                document.getElementById('btn-prev-new').disabled = st.idx === 0;
-                document.getElementById('btn-next-new').disabled = st.idx === list.length - 1;
-                const strip = document.getElementById('d-route-strip-new');
+            const buildRouteNodes = (containerId, stations) => {
+                const strip = document.getElementById(containerId);
                 strip.innerHTML = '';
-                list.forEach((s, i) => {
+                stations.forEach((s, i) => {
                     const node = document.createElement('div');
-                    node.className = 'dot-node' + (i === st.idx ? ' active' : '');
-                    node.innerHTML = `<div class="dot"></div><span>${cleanStation(s)}</span>`;
+                    node.className = 'dot-node';
+                    node.dataset.idx = i;
+                    node.innerHTML = `<div class="dot"></div><span>${cleanStationName(s.name)}</span>`;
                     strip.appendChild(node);
                 });
-                if (st.gpsId) {
-                    document.getElementById('start-gps-new').style.display = 'none';
-                    document.getElementById('stop-gps-new').style.display = 'block';
-                } else {
-                    document.getElementById('start-gps-new').style.display = 'block';
-                    document.getElementById('stop-gps-new').style.display = 'none';
-                }
-                if (upload && st.gpsId && st.phone && st.plate) {
+            };
+
+            const updateRouteNodes = (containerId, currentIdx) => {
+                const strip = document.getElementById(containerId);
+                if (!strip) return;
+                strip.querySelectorAll('.dot-node').forEach(node => { if (parseInt(node.dataset.idx) === currentIdx) node
+                        .classList.add('active');
+                    else node.classList.remove('active'); });
+            };
+
+            const uploadDriverState = async () => {
+                const st = state.driver;
+                if (!st.gpsId || !st.phone || !st.plate) return;
+                const route = getEffectiveRoute();
+                const dirText = st.mode === 'busy' ? (st.dirBusy ? '往大棠' : '往元朗') : (st.dirNormal ? '逆行' : '順行');
+                try {
                     await activeRef.child(st.phone).set({
                         phone: st.phone,
                         plate: st.plate,
                         routeMode: st.mode === 'busy' ? '繁忙時段' : '非繁忙',
                         direction: dirText,
-                        rawStationName: list[st.idx],
+                        rawStationName: route[st.idx].name,
                         passenger: st.pass,
                         maxSeat: st.max,
                         full: st.full,
-                        targetStation: next,
+                        targetStation: st.idx + 1 < route.length ? cleanStationName(route[st.idx + 1].name) : '終點站',
                         ts: Date.now()
                     });
                     activeRef.child(st.phone).onDisconnect().remove();
-                }
+                } catch (e) { console.error('Upload failed:', e); }
             };
-            const refreshOldUI = async (upload) => {
-                const st = state.driver,
-                    list = getStations(),
-                    now = cleanStation(list[st.idx]);
-                document.getElementById('d-info-old').textContent = `手機: ${st.phone||'未登入'} | 車牌: ${st.plate||'未輸入'}`;
-                document.getElementById('d-mode-display-old').textContent = st.mode === 'busy' ? '繁忙時段西鐵快線' :
-                    '非繁忙時段市中心快線';
-                document.getElementById('d-mode-display-old').style.background = st.mode === 'busy' ? '#9333ea' : '#555';
-                const dirText = st.mode === 'busy' ? (st.dirBusy ? '往 大棠' : '往 元朗') : (st.dirNormal ? '🔄 往 大棠黃泥墩' :
-                    '🔄 往 元朗站方向');
-                document.getElementById('d-dir-display-old').textContent = dirText;
-                document.getElementById('d-dir-display-old').style.background = (st.mode === 'busy' && st.dirBusy) || (st
-                    .mode === 'normal' && st.dirNormal) ? '#007aff' : '#ff3b30';
-                document.getElementById('d-station-old').textContent = now;
-                document.getElementById('d-pass-count-old').textContent = st.pass;
-                document.getElementById('btn-prev-old').disabled = st.idx === 0;
-                document.getElementById('btn-next-old').disabled = st.idx === list.length - 1;
-                document.getElementById('d-mode-busy-old').style.background = st.mode === 'busy' ? '#9333ea' : '#333';
-                document.getElementById('d-mode-normal-old').style.background = st.mode === 'normal' ? '#9333ea' : '#333';
-                const fullBtn = document.getElementById('d-fullBtn-old');
-                if (st.full) { fullBtn.textContent = '取消滿座';
-                    fullBtn.className = 'btn btn-red'; } else { fullBtn.textContent = '滿座';
-                    fullBtn.className = 'btn btn-green'; }
-                document.getElementById('d-car16-old').style.background = st.max === 16 ? '#ffcc00' : '#333';
-                document.getElementById('d-car19-old').style.background = st.max === 19 ? '#ffcc00' : '#333';
-                document.getElementById('switch-dir-old').style.display = st.gpsId ? 'block' : 'none';
-                if (st.gpsId) {
-                    document.getElementById('start-gps-old').style.display = 'none';
-                    document.getElementById('stop-gps-old').style.display = 'block';
-                    document.getElementById('d-route-container-old').style.display = 'flex';
-                } else {
-                    document.getElementById('start-gps-old').style.display = 'block';
-                    document.getElementById('stop-gps-old').style.display = 'none';
-                    document.getElementById('d-route-container-old').style.display = 'none';
-                }
-                const routeBox = document.getElementById('d-route-container-old');
-                routeBox.innerHTML = '';
-                list.forEach((s, i) => {
-                    const node = document.createElement('div');
-                    node.className = 'dot-node' + (i === st.idx ? ' active' : '');
-                    node.innerHTML = `<div class="dot"></div><span>${cleanStation(s)}</span>`;
-                    routeBox.appendChild(node);
-                });
-                if (upload && st.gpsId && st.phone && st.plate) {
-                    await activeRef.child(st.phone).set({
-                        phone: st.phone,
-                        plate: st.plate,
-                        routeMode: st.mode === 'busy' ? '繁忙時段' : '非繁忙',
-                        direction: dirText,
-                        rawStationName: list[st.idx],
-                        passenger: st.pass,
-                        maxSeat: st.max,
-                        full: st.full,
-                        targetStation: cleanStation(list[st.idx + 1] || '終點站'),
-                        ts: Date.now()
-                    });
-                    activeRef.child(st.phone).onDisconnect().remove();
-                }
-            };
+
             const refreshDriverUI = (upload = true) => {
-                if (state.useNewLayout) refreshNewUI(upload);
-                else refreshOldUI(upload);
-            };
-
-            // 舊版面 15 秒自動返回
-            const setupOldLayoutIdle = () => {
-                const container = document.getElementById('driver-old-panel');
-                const sec2 = document.getElementById('old-sec2');
-                const sec3 = document.getElementById('old-sec3');
-                const resetTimer = () => {
-                    if (state.oldIdleTimer) clearTimeout(state.oldIdleTimer);
-                    if (!state.autoReturnEnabled) return;
-                    state.oldIdleTimer = setTimeout(() => { sec2.scrollIntoView({ behavior: 'smooth' }); }, 15000);
-                };
-                state.oldResetIdleTimer = resetTimer;
-                container.addEventListener('scroll', resetTimer, { passive: true });
-                container.addEventListener('touchstart', resetTimer, { passive: true });
-                container.addEventListener('click', resetTimer);
-                if (state.msgListeners.driverChild) msgRef.child(state.driver.phone).off('child_added', state.msgListeners
-                    .driverChild);
-                state.msgListeners.driverChild = msgRef.child(state.driver.phone).on('child_added', snap => {
-                    const m = snap.val();
-                    if (m && m.from && m.from.startsWith('乘客:')) {
-                        state.autoReturnEnabled = false;
-                        if (state.oldIdleTimer) clearTimeout(state.oldIdleTimer);
-                        sec3.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-                resetTimer();
-            };
-            const teardownOldLayoutIdle = () => {
-                if (state.oldIdleTimer) { clearTimeout(state.oldIdleTimer);
-                    state.oldIdleTimer = null; }
-                if (state.msgListeners.driverChild) {
-                    msgRef.child(state.driver.phone).off('child_added', state.msgListeners.driverChild);
-                    state.msgListeners.driverChild = null;
-                }
-                state.oldResetIdleTimer = null;
-            };
-            const switchLayout = (useNew) => {
-                state.useNewLayout = useNew;
-                localStorage.setItem('van_layout_v83', useNew ? 'new' : 'old');
-                document.getElementById('driver-new-panel').style.display = useNew ? 'flex' : 'none';
-                document.getElementById('driver-old-panel').style.display = useNew ? 'none' : 'block';
-                document.getElementById('btn-switch-layout').textContent = useNew ? '🔧 切換舊版面' : '🔧 切換大掣版面';
-                if (!useNew) { teardownOldLayoutIdle();
-                    setupOldLayoutIdle(); } else { teardownOldLayoutIdle(); }
-                bindDriverEvents();
-                refreshDriverUI(false);
-            };
-
-            const bindDriverEvents = () => {
-                if (state.useNewLayout) {
-                    document.getElementById('btn-add-pass-new').onclick = () => { if (state.driver.pass < state.driver
-                            .max) { state.driver.pass++; if (state.driver.pass === state.driver.max) state.driver
-                                .full = true;
-                            refreshDriverUI(); } };
-                    document.getElementById('btn-sub-pass-new').onclick = () => { if (state.driver.pass > 0) { state.driver
-                            .pass--;
-                            state.driver.full = false;
-                            refreshDriverUI(); } };
-                    document.getElementById('d-full-btn-new').onclick = () => { state.driver.full = !state.driver.full;
-                        speak(state.driver.full ? '已滿座' : '取消滿座');
-                        refreshDriverUI(); };
-                    document.getElementById('d-car-btn-new').onclick = () => { state.driver.max = state.driver.max === 16 ?
-                            19 : 16;
-                        refreshDriverUI(); };
-                    document.getElementById('btn-prev-new').onclick = () => { if (state.driver.idx > 0) { state.driver
-                            .idx--;
-                            state.driver.manualUntil = Date.now() + 10000;
-                            refreshDriverUI(); } };
-                    document.getElementById('btn-next-new').onclick = () => {
-                        const list = getStations();
-                        if (state.driver.idx < list.length - 1) { state.driver.idx++;
-                            state.driver.manualUntil = Date.now() + 10000; const cur = cleanStation(list[state.driver
-                                .idx]),
-                                nxt = state.driver.idx + 1 < list.length ? cleanStation(list[state.driver.idx + 1]) :
-                                null;
-                            speak(`即將到達：${cur}`, () => { if (nxt) setTimeout(() => speak(`下一站：${nxt}`),
-                                    2000); });
-                            refreshDriverUI(); }
-                        if (state.driver.idx >= list.length - 1) autoReverse();
-                    };
-                    document.getElementById('btn-switch-dir-new').onclick = () => { if (state.driver.mode === 'busy')
-                            state.driver.dirBusy = !state.driver.dirBusy;
-                        else state.driver.dirNormal = !state.driver.dirNormal;
-                        state.driver.idx = 0;
-                        state.driver.manualUntil = Date.now() + 10000;
-                        refreshDriverUI(); };
-                    document.getElementById('btn-mode-toggle-new').onclick = () => { state.driver.mode = state.driver
-                            .mode === 'busy' ? 'normal' : 'busy';
-                        state.driver.idx = 0;
-                        state.driver.dirBusy = false;
-                        state.driver.dirNormal = false;
-                        refreshDriverUI(); };
-                    document.getElementById('start-gps-new').onclick = () => { startGps();
-                        refreshDriverUI(); };
-                    document.getElementById('stop-gps-new').onclick = () => { if (state.driver.gpsId) navigator
-                            .geolocation.clearWatch(state.driver.gpsId);
-                        state.driver.gpsId = null;
-                        activeRef.child(state.driver.phone).remove();
-                        refreshDriverUI(false); };
+                const layout = state.ui.layout;
+                const st = state.driver;
+                const route = getEffectiveRoute();
+                const currentName = cleanStationName(route[st.idx].name);
+                const nextName = st.idx + 1 < route.length ? cleanStationName(route[st.idx + 1].name) : '終點站';
+                const dirText = st.mode === 'busy' ? (st.dirBusy ? '往大棠' : '往元朗') : (st.dirNormal ? '逆行' : '順行');
+                if (layout === 'new') {
+                    document.getElementById('d-info-new').textContent =
+                        `手機: ${st.phone || '未登入'} | 車牌: ${st.plate || '-'}`;
+                    document.getElementById('d-mode-badge-new').textContent = st.mode === 'busy' ? '繁忙時段' : '非繁忙';
+                    document.getElementById('d-dir-badge-new').textContent = dirText;
+                    document.getElementById('d-dir-badge-new').className = (st.mode === 'busy' && st.dirBusy) || (st
+                        .mode === 'normal' && st.dirNormal) ? 'badge badge-blue' : 'badge badge-red';
+                    document.getElementById('d-station-new').textContent = currentName;
+                    document.getElementById('d-target-new').textContent = `下一站：${nextName}`;
+                    document.getElementById('d-pass-count-new').textContent = st.pass;
+                    const fullBtn = document.getElementById('d-full-btn-new');
+                    if (st.full) { fullBtn.textContent = '取消滿座';
+                        fullBtn.className = 'btn btn-red'; } else { fullBtn.textContent = '標記滿座';
+                        fullBtn.className = 'btn btn-green'; }
+                    document.getElementById('d-car-btn-new').textContent = st.max + '座';
+                    document.getElementById('btn-prev-new').disabled = st.idx === 0;
+                    document.getElementById('btn-next-new').disabled = st.idx === route.length - 1;
+                    if (!state.routeNodesBuilt.new) { buildRouteNodes('d-route-strip-new', route);
+                        state.routeNodesBuilt.new = true; }
+                    updateRouteNodes('d-route-strip-new', st.idx);
+                    document.getElementById('start-gps-new').style.display = st.gpsId ? 'none' : 'block';
+                    document.getElementById('stop-gps-new').style.display = st.gpsId ? 'block' : 'none';
                 } else {
-                    document.getElementById('btn-add-pass-old').onclick = () => { if (state.driver.pass < state.driver
-                            .max) { state.driver.pass++; if (state.driver.pass === state.driver.max) state.driver
-                                .full = true;
-                            refreshDriverUI(); } };
-                    document.getElementById('btn-sub-pass-old').onclick = () => { if (state.driver.pass > 0) { state.driver
-                            .pass--;
-                            state.driver.full = false;
-                            refreshDriverUI(); } };
-                    document.getElementById('d-fullBtn-old').onclick = () => { state.driver.full = !state.driver.full;
-                        speak(state.driver.full ? '已滿座' : '取消滿座');
-                        refreshDriverUI(); };
-                    document.getElementById('d-car16-old').onclick = () => { state.driver.max = 16;
-                        refreshDriverUI(); };
-                    document.getElementById('d-car19-old').onclick = () => { state.driver.max = 19;
-                        refreshDriverUI(); };
-                    document.getElementById('btn-prev-old').onclick = () => { if (state.driver.idx > 0) { state.driver
-                            .idx--;
-                            state.driver.manualUntil = Date.now() + 10000;
-                            refreshDriverUI(); } };
-                    document.getElementById('btn-next-old').onclick = () => {
-                        const list = getStations();
-                        if (state.driver.idx < list.length - 1) { state.driver.idx++;
-                            state.driver.manualUntil = Date.now() + 10000; const cur = cleanStation(list[state.driver
-                                .idx]),
-                                nxt = state.driver.idx + 1 < list.length ? cleanStation(list[state.driver.idx + 1]) :
-                                null;
-                            speak(`即將到達：${cur}`, () => { if (nxt) setTimeout(() => speak(`下一站：${nxt}`),
-                                    2000); });
-                            refreshDriverUI(); }
-                        if (state.driver.idx >= list.length - 1) autoReverse();
-                    };
-                    document.getElementById('switch-dir-old').onclick = () => { if (state.driver.mode === 'busy') state
-                            .driver.dirBusy = !state.driver.dirBusy;
-                        else state.driver.dirNormal = !state.driver.dirNormal;
-                        state.driver.idx = 0;
-                        state.driver.manualUntil = Date.now() + 10000;
-                        refreshDriverUI(); };
-                    document.getElementById('d-mode-busy-old').onclick = () => { state.driver.mode = 'busy';
-                        state.driver.idx = 0;
-                        state.driver.dirBusy = false;
-                        refreshDriverUI(); };
-                    document.getElementById('d-mode-normal-old').onclick = () => { state.driver.mode = 'normal';
-                        state.driver.idx = 0;
-                        state.driver.dirNormal = false;
-                        refreshDriverUI(); };
-                    document.getElementById('start-gps-old').onclick = () => { startGps();
-                        refreshDriverUI(); };
-                    document.getElementById('stop-gps-old').onclick = () => { if (state.driver.gpsId) navigator
-                            .geolocation.clearWatch(state.driver.gpsId);
-                        state.driver.gpsId = null;
-                        activeRef.child(state.driver.phone).remove();
-                        refreshDriverUI(false); };
-                    document.getElementById('btn-logout-old').onclick = () => { if (state.driver.gpsId) navigator
-                            .geolocation.clearWatch(state.driver.gpsId);
-                        activeRef.child(state.driver.phone).remove();
-                        state.driver.phone = '';
-                        state.driver.plate = '';
-                        showView('view-lobby'); };
-                    document.getElementById('btn-driver-send-old').onclick = () => {
-                        const txt = document.getElementById('driver-msg-input-old').value.trim();
-                        if (txt) { msgRef.child(state.driver.phone).push({ from: '司機' + state.driver.plate,
-                                type: 'text', text: txt, ts: Date.now() }); document.getElementById(
-                                'driver-msg-input-old').value = '';
-                            state.autoReturnEnabled = true; if (state.oldResetIdleTimer) state.oldResetIdleTimer(); }
-                    };
-                    document.getElementById('btn-driver-clear-old').onclick = () => { if (confirm('清除訊息？')) msgRef.child(
-                            state.driver.phone).remove(); };
+                    document.getElementById('d-info-old').textContent =
+                        `手機: ${st.phone || '未登入'} | 車牌: ${st.plate || '未輸入'}`;
+                    document.getElementById('d-mode-display-old').textContent = st.mode === 'busy' ? '繁忙時段西鐵快線' :
+                        '非繁忙時段市中心快線';
+                    document.getElementById('d-mode-display-old').style.background = st.mode === 'busy' ? '#9333ea' :
+                    '#555';
+                    document.getElementById('d-dir-display-old').textContent = dirText;
+                    document.getElementById('d-dir-display-old').style.background = (st.mode === 'busy' && st.dirBusy) ||
+                        (st.mode === 'normal' && st.dirNormal) ? '#007aff' : '#ff3b30';
+                    document.getElementById('d-station-old').textContent = currentName;
+                    document.getElementById('d-pass-count-old').textContent = st.pass;
+                    document.getElementById('btn-prev-old').disabled = st.idx === 0;
+                    document.getElementById('btn-next-old').disabled = st.idx === route.length - 1;
+                    document.getElementById('d-mode-busy-old').style.background = st.mode === 'busy' ? '#9333ea' :
+                    '#333';
+                    document.getElementById('d-mode-normal-old').style.background = st.mode === 'normal' ? '#9333ea' :
+                    '#333';
+                    const fullBtnOld = document.getElementById('d-fullBtn-old');
+                    if (st.full) { fullBtnOld.textContent = '取消滿座';
+                        fullBtnOld.className = 'btn btn-red'; } else { fullBtnOld.textContent = '滿座';
+                        fullBtnOld.className = 'btn btn-green'; }
+                    document.getElementById('d-car16-old').style.background = st.max === 16 ? '#ffcc00' : '#333';
+                    document.getElementById('d-car19-old').style.background = st.max === 19 ? '#ffcc00' : '#333';
+                    document.getElementById('switch-dir-old').style.display = st.gpsId ? 'block' : 'none';
+                    document.getElementById('start-gps-old').style.display = st.gpsId ? 'none' : 'block';
+                    document.getElementById('stop-gps-old').style.display = st.gpsId ? 'block' : 'none';
+                    document.getElementById('d-route-container-old').style.display = st.gpsId ? 'flex' : 'none';
+                    if (!state.routeNodesBuilt.old) { buildRouteNodes('d-route-container-old', route);
+                        state.routeNodesBuilt.old = true; }
+                    updateRouteNodes('d-route-container-old', st.idx);
                 }
+                if (upload) uploadDriverState();
+            };
+
+            const updatePassengerView = () => {
+                if (!state.passenger.tracking) return;
+                if (state.listeners.passengerMsg) msgRef.child(state.passenger.tracking).off('value', state.listeners
+                    .passengerMsg);
+                if (state.listeners.passengerBus) activeRef.child(state.passenger.tracking).off('value', state.listeners
+                    .passengerBus);
+                state.listeners.passengerMsg = snap => renderMessages(snap, document.getElementById('pass-msg-list'));
+                msgRef.child(state.passenger.tracking).on('value', state.listeners.passengerMsg);
+                state.listeners.passengerBus = snap => {
+                    const bus = snap.val();
+                    if (!bus || !bus.plate) return;
+                    const raw = bus.rawStationName || '';
+                    const clean = cleanStationName(raw);
+                    if (raw !== state.passenger.lastStation) {
+                        if (state.passenger.voice) speak(`小巴 ${bus.plate} 駛至：${clean}。` + (bus.full ? '滿座' : ''));
+                        state.passenger.lastStation = raw;
+                    }
+                    document.getElementById('pass-data-card').innerHTML = `
+                        <div style="font-size:18px; color:#aaa;">更新: ${new Date(bus.ts).toLocaleTimeString()}</div>
+                        <span class="badge">${bus.routeMode}</span> <span class="badge badge-red">${bus.direction}</span>
+                        <div class="station-name">${clean}</div><div style="color:var(--gold);">➡️ ${bus.targetStation}</div>
+                        <div class="big-number" style="font-size:48px;">${bus.passenger ?? 0}</div>
+                        ${bus.full ? '<div style="color:#ff453a;">⚠️ 滿座</div>' : ''}
+                        <div style="color:var(--gold);">車牌: ${bus.plate}</div>`;
+                };
+                activeRef.child(state.passenger.tracking).on('value', state.listeners.passengerBus);
             };
 
             const renderBusList = () => {
-                if (state.busListListener) activeRef.off('value', state.busListListener);
-                state.busListListener = snap => {
-                    const data = snap.val() || {},
-                        now = Date.now(),
-                        container = document.getElementById('bus-list-container');
-                    const valid = Object.entries(data).filter(([k, v]) => v?.plate && (now - v.ts) < 60000);
+                if (state.listeners.busList) activeRef.off('value', state.listeners.busList);
+                state.listeners.busList = snap => {
+                    const data = snap.val() || {};
+                    const now = Date.now();
+                    const container = document.getElementById('bus-list-container');
+                    const valid = Object.entries(data).filter(([_, v]) => v && v.plate && (now - v.ts) < 60000);
                     if (!valid.length) { container.innerHTML = '<div class="card">暫無小巴當值</div>'; return; }
-                    container.innerHTML = valid.map(([phone, b]) => {
-                        const cl = cleanStation(b.rawStationName || ''),
-                            ago = Math.round((now - b.ts) / 1000);
+                    container.innerHTML = valid.map(([phone, bus]) => {
+                        const cl = cleanStationName(bus.rawStationName || '');
+                        const ago = Math.round((now - bus.ts) / 1000);
                         return `<div class="card" style="text-align:left;">
-                    <div style="font-size:22px; font-weight:bold;">${b.full?'🔴':'🟢'} ${b.plate}</div>
-                    <div>📍 ${cl} · ${b.direction}</div>
-                    <div>💺 ${b.passenger}/${b.maxSeat} · ${ago}秒前</div>
-                    <button class="btn btn-portal track-btn" data-phone="${phone}" style="margin-top:8px;">追蹤此車</button>
-                </div>`;
+                            <div style="font-size:22px; font-weight:bold;">${bus.full ? '🔴' : '🟢'} ${bus.plate}</div>
+                            <div>📍 ${cl} · ${bus.direction}</div>
+                            <div>💺 ${bus.passenger}/${bus.maxSeat} · ${ago}秒前</div>
+                            <button class="btn btn-portal track-btn" data-phone="${phone}" style="margin-top:8px;">追蹤此車</button>
+                        </div>`;
                     }).join('');
                     container.querySelectorAll('.track-btn').forEach(b => b.addEventListener('click', function() {
                         state.passenger.tracking = this.dataset.phone;
@@ -1216,69 +1033,239 @@
                         updatePassengerView();
                     }));
                 };
-                activeRef.on('value', state.busListListener);
+                activeRef.on('value', state.listeners.busList);
             };
-            const updatePassengerView = () => {
-                if (!state.passenger.tracking) return;
-                if (state.msgListeners.passenger) msgRef.child(state.passenger.tracking).off('value', state.msgListeners
-                    .passenger);
-                state.msgListeners.passenger = snap => renderMessages(snap, 'pass-msg-list');
-                msgRef.child(state.passenger.tracking).on('value', state.msgListeners.passenger);
-                activeRef.child(state.passenger.tracking).on('value', snap => {
-                    const bus = snap.val();
-                    if (!bus?.plate) return;
-                    const raw = bus.rawStationName || '',
-                        clean = cleanStation(raw);
-                    if (raw !== state.passenger.lastStation) {
-                        if (state.passenger.voice) speak(`小巴 ${bus.plate} 駛至：${clean}。` + (bus.full ? '滿座' : ''));
-                        state.passenger.lastStation = raw;
-                    }
-                    document.getElementById('pass-data-card').innerHTML = `
-                <div style="font-size:18px; color:#aaa;">更新: ${new Date(bus.ts).toLocaleTimeString()}</div>
-                <span class="badge">${bus.routeMode}</span> <span class="badge badge-red">${bus.direction}</span>
-                <div class="station-name">${clean}</div><div style="color:var(--gold);">➡️ ${bus.targetStation}</div>
-                <div class="big-number" style="font-size:48px;">${bus.passenger??0}</div>
-                ${bus.full?'<div style="color:#ff453a;">⚠️ 滿座</div>':''}
-                <div style="color:var(--gold);">車牌: ${bus.plate}</div>`;
+
+            const stopPassengerTracking = () => {
+                if (state.listeners.passengerMsg) { msgRef.child(state.passenger.tracking).off('value', state.listeners
+                        .passengerMsg);
+                    state.listeners.passengerMsg = null; }
+                if (state.listeners.passengerBus) { activeRef.child(state.passenger.tracking).off('value', state.listeners
+                        .passengerBus);
+                    state.listeners.passengerBus = null; }
+            };
+
+            const bindDriverEvents = () => {
+                const layout = state.ui.layout;
+                const ids = {
+                    addPass: layout === 'new' ? 'btn-add-pass-new' : 'btn-add-pass-old',
+                    subPass: layout === 'new' ? 'btn-sub-pass-new' : 'btn-sub-pass-old',
+                    fullBtn: layout === 'new' ? 'd-full-btn-new' : 'd-fullBtn-old',
+                    prev: layout === 'new' ? 'btn-prev-new' : 'btn-prev-old',
+                    next: layout === 'new' ? 'btn-next-new' : 'btn-next-old',
+                    switchDir: layout === 'new' ? 'btn-switch-dir-new' : 'switch-dir-old',
+                    startGps: layout === 'new' ? 'start-gps-new' : 'start-gps-old',
+                    stopGps: layout === 'new' ? 'stop-gps-new' : 'stop-gps-old',
+                };
+                document.getElementById(ids.addPass).onclick = () => { if (state.driver.pass < state.driver.max) { state
+                        .driver.pass++; if (state.driver.pass === state.driver.max) state.driver.full = true;
+                        refreshDriverUI(); } };
+                document.getElementById(ids.subPass).onclick = () => { if (state.driver.pass > 0) { state.driver.pass--;
+                        state.driver.full = false;
+                        refreshDriverUI(); } };
+                document.getElementById(ids.fullBtn).onclick = () => { state.driver.full = !state.driver.full;
+                    speak(state.driver.full ? '已滿座' : '取消滿座');
+                    refreshDriverUI(); };
+                if (layout === 'new') {
+                    document.getElementById('d-car-btn-new').onclick = () => { state.driver.max = state.driver.max === 16 ?
+                            19 : 16;
+                        refreshDriverUI(); };
+                    document.getElementById('btn-mode-toggle-new').onclick = () => { state.driver.mode = state.driver.mode ===
+                            'busy' ? 'normal' : 'busy';
+                        state.driver.idx = 0;
+                        state.driver.dirBusy = false;
+                        state.driver.dirNormal = false;
+                        state.routeNodesBuilt.new = false;
+                        refreshDriverUI(); };
+                } else {
+                    document.getElementById('d-car16-old').onclick = () => { state.driver.max = 16;
+                        refreshDriverUI(); };
+                    document.getElementById('d-car19-old').onclick = () => { state.driver.max = 19;
+                        refreshDriverUI(); };
+                    document.getElementById('d-mode-busy-old').onclick = () => { state.driver.mode = 'busy';
+                        state.driver.idx = 0;
+                        state.driver.dirBusy = false;
+                        state.routeNodesBuilt.old = false;
+                        refreshDriverUI(); };
+                    document.getElementById('d-mode-normal-old').onclick = () => { state.driver.mode = 'normal';
+                        state.driver.idx = 0;
+                        state.driver.dirNormal = false;
+                        state.routeNodesBuilt.old = false;
+                        refreshDriverUI(); };
+                    document.getElementById('btn-driver-send-old').onclick = () => {
+                        const txt = document.getElementById('driver-msg-input-old').value.trim();
+                        if (txt) { msgRef.child(state.driver.phone).push({ from: '司機' + state.driver.plate,
+                            type: 'text', text: txt, ts: Date.now() });
+                            document.getElementById('driver-msg-input-old').value = '';
+                            state.autoReturnEnabled = true; if (state.oldResetIdleTimer) state
+                            .oldResetIdleTimer(); }
+                    };
+                    document.getElementById('btn-driver-clear-old').onclick = () => { if (confirm('清除訊息？')) msgRef
+                            .child(state.driver.phone).remove(); };
+                    document.getElementById('btn-logout-old').onclick = () => { stopGps();
+                        activeRef.child(state.driver.phone).remove();
+                        state.driver.phone = '';
+                        state.driver.plate = '';
+                        showView('view-lobby'); };
+                }
+                document.getElementById(ids.prev).onclick = () => { if (state.driver.idx > 0) { state.driver.idx--;
+                        state.driver.manualUntil = Date.now() + 10000;
+                        refreshDriverUI(); } };
+                document.getElementById(ids.next).onclick = () => {
+                    const route = getEffectiveRoute();
+                    if (state.driver.idx < route.length - 1) { state.driver.idx++;
+                        state.driver.manualUntil = Date.now() + 10000; const cur = cleanStationName(route[state.driver.idx]
+                            .name); const nxt = state.driver.idx + 1 < route.length ? cleanStationName(route[state.driver
+                            .idx + 1].name) : null;
+                        speak(`即將到達：${cur}`, () => { if (nxt) setTimeout(() => speak(`下一站：${nxt}`), 2000); });
+                        refreshDriverUI(); if (state.driver.idx >= route.length - 1) autoReverse(); }
+                };
+                document.getElementById(ids.switchDir).onclick = () => { if (state.driver.mode === 'busy') state.driver
+                        .dirBusy = !state.driver.dirBusy;
+                    else state.driver.dirNormal = !state.driver.dirNormal;
+                    state.driver.idx = 0;
+                    state.driver.manualUntil = Date.now() + 10000;
+                    state.routeNodesBuilt[layout] = false;
+                    refreshDriverUI(); };
+                document.getElementById(ids.startGps).onclick = () => { unlockIosSpeech();
+                    startGps();
+                    refreshDriverUI(); };
+                document.getElementById(ids.stopGps).onclick = () => { stopGps();
+                    refreshDriverUI(false); };
+                document.getElementById('btn-driver-send-overlay').onclick = () => {
+                    const txt = document.getElementById('driver-msg-input-overlay').value.trim();
+                    if (txt) { msgRef.child(state.driver.phone).push({ from: '司機' + state.driver.plate, type: 'text',
+                            text: txt, ts: Date.now() });
+                        document.getElementById('driver-msg-input-overlay').value = ''; }
+                };
+                document.getElementById('btn-driver-clear-overlay').onclick = () => { if (confirm('清除所有訊息？')) msgRef.child(
+                        state.driver.phone).remove(); };
+            };
+
+            const setupOldLayoutAutoScroll = () => {
+                const container = document.getElementById('driver-old-panel');
+                const sec2 = document.getElementById('old-sec2');
+                const sec3 = document.getElementById('old-sec3');
+                const resetTimer = () => { if (state.oldIdleTimer) clearTimeout(state.oldIdleTimer); if (!state
+                        .autoReturnEnabled) return;
+                    state.oldIdleTimer = setTimeout(() => { sec2.scrollIntoView({ behavior: 'smooth' }); }, 15000); };
+                state.oldResetIdleTimer = resetTimer;
+                container.addEventListener('scroll', resetTimer, { passive: true });
+                container.addEventListener('touchstart', resetTimer, { passive: true });
+                container.addEventListener('click', resetTimer);
+                if (state.listeners.oldAutoScroll) msgRef.child(state.driver.phone).off('child_added', state.listeners
+                    .oldAutoScroll);
+                state.listeners.oldAutoScroll = msgRef.child(state.driver.phone).on('child_added', snap => {
+                    const m = snap.val();
+                    if (m && m.from && m.from.startsWith('乘客:')) { state.autoReturnEnabled = false; if (state
+                            .oldIdleTimer) clearTimeout(state.oldIdleTimer);
+                        sec3.scrollIntoView({ behavior: 'smooth' });
+                        setTimeout(() => { state.autoReturnEnabled = true;
+                            resetTimer(); }, 15000); }
+                });
+                resetTimer();
+            };
+
+            const teardownOldLayoutAutoScroll = () => { if (state.oldIdleTimer) { clearTimeout(state.oldIdleTimer);
+                    state.oldIdleTimer = null; } if (state.listeners.oldAutoScroll) { msgRef.child(state.driver.phone).off(
+                        'child_added', state.listeners.oldAutoScroll);
+                    state.listeners.oldAutoScroll = null; }
+                state.oldResetIdleTimer = null; };
+
+            const switchLayout = (useNew) => {
+                state.ui.layout = useNew ? 'new' : 'old';
+                localStorage.setItem('van_layout_v86', state.ui.layout);
+                document.getElementById('driver-new-panel').style.display = useNew ? 'flex' : 'none';
+                document.getElementById('driver-old-panel').style.display = useNew ? 'none' : 'block';
+                document.getElementById('btn-switch-layout').textContent = useNew ? '🔧 切換舊版面' : '🔧 切換大掣版面';
+                state.routeNodesBuilt.new = false;
+                state.routeNodesBuilt.old = false;
+                if (!useNew) { teardownOldLayoutAutoScroll();
+                    setupOldLayoutAutoScroll(); } else { teardownOldLayoutAutoScroll(); }
+                bindDriverEvents();
+                refreshDriverUI(false);
+            };
+
+            const cleanupDriverListeners = () => { if (state.listeners.driverMsg) { msgRef.child(state.driver.phone).off(
+                        'value', state.listeners.driverMsg);
+                    state.listeners.driverMsg = null; }
+                teardownOldLayoutAutoScroll(); };
+
+            // ---------- 總管後台功能 ----------
+            const renderAdminBusList = () => {
+                const container = document.getElementById('admin-bus-list');
+                activeRef.on('value', snap => {
+                    const data = snap.val() || {};
+                    const now = Date.now();
+                    const entries = Object.entries(data).filter(([_, v]) => v && v.plate);
+                    document.getElementById('stat-online').textContent = entries.length;
+                    document.getElementById('stat-passengers').textContent = entries.reduce((sum, [_, b]) => sum + (b
+                        .passenger || 0), 0);
+                    if (!entries.length) { container.innerHTML = '<p style="color:#aaa;">暫無在線車輛</p>'; return; }
+                    container.innerHTML = entries.map(([phone, bus]) => {
+                        const cl = cleanStationName(bus.rawStationName || '');
+                        const ago = Math.round((now - bus.ts) / 1000);
+                        return `<div class="card" style="text-align:left;">
+                            <div style="font-size:20px; font-weight:bold;">${bus.plate} <span style="font-size:14px; color:#aaa;">(${phone})</span></div>
+                            <div>📍 ${cl} · ${bus.direction} · ${bus.passenger}/${bus.maxSeat}人</div>
+                            <div style="margin-top:8px;">
+                                <button class="btn btn-red kick-btn" data-phone="${phone}" style="width:auto; padding:8px 16px; font-size:16px;">強制下線</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    container.querySelectorAll('.kick-btn').forEach(b => b.addEventListener('click', function() {
+                        const phone = this.dataset.phone;
+                        if (confirm(`確定要將 ${phone} 強制下線嗎？`)) {
+                            activeRef.child(phone).remove().then(() => toast('已強制下線')).catch(() => toast(
+                                '操作失敗'));
+                        }
+                    }));
                 });
             };
 
-            document.addEventListener('DOMContentLoaded', () => {
-                // iOS 語音預熱：在首次用戶點擊時啟動
-                const warmUpIOS = () => {
-                    if (!state.iosSpeechReady && 'speechSynthesis' in window) {
-                        state.iosSpeechReady = true;
-                        speechSynthesis.cancel();
-                        const u = new SpeechSynthesisUtterance('');
-                        u.volume = 0;
-                        speechSynthesis.speak(u);
-                    }
-                };
-                document.addEventListener('touchstart', warmUpIOS, { once: true });
-                document.addEventListener('click', warmUpIOS, { once: true });
+            const adminLogin = () => {
+                const pw = prompt('請輸入總管密碼：');
+                if (pw === 'Fai64989786') {
+                    state.adminAuthenticated = true;
+                    showView('view-admin');
+                    renderAdminBusList();
+                    announceRef.on('value', snap => {
+                        const v = snap.val();
+                        document.getElementById('current-announce-text').textContent = v && v.text ? v.text : '無';
+                    });
+                } else if (pw !== null) {
+                    toast('❌ 密碼錯誤');
+                }
+            };
 
-                document.getElementById('btn-guide-voice').onclick = () => {
-                    warmUpIOS();
-                    if (state.guideToggle) speak('歡迎使用西鐵小巴，祝你有一個愉快嘅旅程');
-                    else speak('司機請點擊紅色按鈕登入，輸入車牌。乘客點擊藍色按鈕，輸入WhatsApp號碼。長按錄音掣發送語音訊息。');
-                    state.guideToggle = !state.guideToggle;
-                };
-                document.getElementById('btn-passenger').onclick = () => {
-                    let name = localStorage.getItem('van_pass_name');
-                    if (!name) { name = prompt('輸入WhatsApp號碼或暱稱：'); if (!name) return;
+            document.addEventListener('DOMContentLoaded', () => {
+                announceRef.on('value', snap => {
+                    const v = snap.val();
+                    ['announce-list', 'announce-track', 'announce-driver'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) { el.style.display = v && v.text ? 'block' : 'none'; if (v && v.text) el
+                                .textContent = '📢 ' + v.text; }
+                    });
+                });
+
+                document.getElementById('btn-guide-voice').onclick = () => { unlockIosSpeech(); if (state.guideToggle)
+                        speak('歡迎使用西鐵小巴，祝你有一個愉快嘅旅程');
+                    else speak(
+                        '司機請點擊紅色按鈕登入，輸入車牌。乘客點擊藍色按鈕，輸入WhatsApp號碼。長按錄音掣發送語音訊息。');
+                    state.guideToggle = !state.guideToggle; };
+
+                document.getElementById('btn-passenger').onclick = () => { let name = localStorage.getItem(
+                        'van_pass_name'); if (!name) { name = prompt('輸入WhatsApp號碼或暱稱：'); if (!name) return;
                         localStorage.setItem('van_pass_name', name); }
                     state.passenger.name = name;
                     showView('view-passenger-list');
                     renderBusList();
-                    speak('請支持開發者');
-                };
-                document.getElementById('btn-driver').onclick = () => {
-                    let phone = localStorage.getItem('van_drv_phone') || '',
-                        plate = localStorage.getItem('van_drv_plate') || '';
-                    phone = prompt('手機號碼', phone);
-                    if (!phone) return;
-                    plate = prompt('車牌', plate);
-                    if (!plate) return;
+                    speak('請支持開發者'); };
+
+                document.getElementById('btn-driver').onclick = () => { let phone = localStorage.getItem(
+                        'van_drv_phone') || ''; let plate = localStorage.getItem('van_drv_plate') || '';
+                    phone = prompt('手機號碼', phone); if (!phone) return;
+                    plate = prompt('車牌', plate); if (!plate) return;
                     state.driver.phone = phone;
                     state.driver.plate = plate.toUpperCase();
                     localStorage.setItem('van_drv_phone', phone);
@@ -1288,112 +1275,99 @@
                     state.driver.dirBusy = false;
                     state.driver.pass = 0;
                     state.driver.max = 16;
-                    state.driver.full = false;
-                    msgRef.child(phone).off('value');
-                    msgRef.child(phone).on('value', updateAllDriverMessages);
+                    state.driver.full = false; if (state.listeners.driverMsg) msgRef.child(phone).off('value', state
+                        .listeners.driverMsg);
+                    state.listeners.driverMsg = snap => { renderMessages(snap, document.getElementById(
+                            'driver-msg-list-overlay'));
+                        renderMessages(snap, document.getElementById('driver-msg-list-old')); };
+                    msgRef.child(phone).on('value', state.listeners.driverMsg);
                     showView('view-driver');
-                    switchLayout(state.useNewLayout);
-                };
-                document.getElementById('btn-generate-qr').onclick = () => {
-                    const name = prompt('乘客名稱：');
-                    if (!name) return;
+                    switchLayout(state.ui.layout === 'new'); };
+
+                document.getElementById('btn-generate-qr').onclick = () => { const name = prompt('乘客名稱：'); if (!name)
+                        return;
                     document.getElementById('qr-box').style.display = 'block';
                     document.getElementById('qr-box').innerHTML =
-                        '<div id="qrcode"></div><button class="btn btn-secondary" id="close-qr">關閉</button>';
-                    new QRCode(document.getElementById('qrcode'), { text: window.location.href.split('?')[0] +
-                            '?passenger=' + encodeURIComponent(name), width: 200, height: 200 });
+                        '<div id="qrcode" style="display:flex; justify-content:center;"></div><button class="btn btn-secondary" id="close-qr">關閉</button>';
+                    let baseUrl = window.location.href.split('?')[0].split('#')[0];
+                    new QRCode(document.getElementById('qrcode'), { text: baseUrl + '?passenger=' + encodeURIComponent(
+                            name), width: 200, height: 200 });
                     document.getElementById('close-qr').onclick = () => document.getElementById('qr-box').style.display =
-                        'none';
-                };
-                document.getElementById('fps-code').onclick = () => { navigator.clipboard.writeText('122891914').then(() => {
-                        toast('已複製');
+                        'none'; };
+
+                document.getElementById('fps-code').onclick = () => { navigator.clipboard.writeText('122891914').then(
+                    () => { toast('已複製');
                         speak('多謝支持'); }); };
-                document.getElementById('btn-switch-layout').onclick = () => switchLayout(!state.useNewLayout);
-                document.getElementById('voice-toggle').onclick = function() {
+
+                document.getElementById('btn-switch-layout').onclick = () => switchLayout(state.ui.layout !== 'new');
+
+                document.getElementById('voice-toggle').onclick = function() { unlockIosSpeech();
                     state.passenger.voice = !state.passenger.voice;
                     this.textContent = state.passenger.voice ? '🔊 廣東話報站 ON' : '🔇 廣東話報站 OFF';
-                    this.style.background = state.passenger.voice ? '#30d158' : '#ff9f0a';
-                };
-                document.getElementById('btn-pass-send').onclick = () => {
-                    const txt = document.getElementById('pass-msg-input').value.trim();
-                    if (txt && state.passenger.tracking) { msgRef.child(state.passenger.tracking).push({ from: '乘客:' +
-                                state.passenger.name, type: 'text', text: txt, ts: Date.now() }); document
-                            .getElementById('pass-msg-input').value = ''; }
-                };
-                document.getElementById('btn-pass-clear').onclick = () => { if (confirm('清除訊息？')) msgRef.child(state.passenger
-                        .tracking).remove(); };
+                    this.style.background = state.passenger.voice ? '#30d158' : '#ff9f0a'; };
 
-                // 綁定所有錄音按鈕（修復後的核心函數）
-                setupRecBtn('btn-pass-record', 'passenger', 'pass-timer');
-                setupRecBtn('btn-driver-record-overlay', 'driver', 'driver-timer-overlay');
-                setupRecBtn('btn-driver-record-old', 'driver', 'driver-timer-old');
+                document.getElementById('btn-pass-send').onclick = () => { const txt = document.getElementById(
+                        'pass-msg-input').value.trim(); if (txt && state.passenger.tracking) { msgRef.child(state
+                        .passenger.tracking).push({ from: '乘客:' + state.passenger.name, type: 'text', text: txt,
+                        ts: Date.now() });
+                    document.getElementById('pass-msg-input').value = ''; } };
+                document.getElementById('btn-pass-clear').onclick = () => { if (confirm('清除訊息？')) msgRef.child(state
+                        .passenger.tracking).remove(); };
+
+                setupRecordButton('btn-pass-record', 'passenger', 'pass-timer');
+                setupRecordButton('btn-driver-record-overlay', 'driver', 'driver-timer-overlay');
+                setupRecordButton('btn-driver-record-old', 'driver', 'driver-timer-old');
 
                 document.getElementById('float-msg-btn').onclick = () => document.getElementById('msg-overlay').style
                     .display = 'flex';
                 document.getElementById('close-msg-overlay').onclick = () => document.getElementById('msg-overlay').style
                     .display = 'none';
-                document.getElementById('btn-driver-send-overlay').onclick = () => {
-                    const txt = document.getElementById('driver-msg-input-overlay').value.trim();
-                    if (txt) { msgRef.child(state.driver.phone).push({ from: '司機' + state.driver.plate, type: 'text',
-                            text: txt, ts: Date.now() }); document.getElementById('driver-msg-input-overlay').value =
-                        ''; }
-                };
-                document.getElementById('btn-driver-clear-overlay').onclick = () => { if (confirm('清除所有訊息？')) msgRef.child(
-                        state.driver.phone).remove(); };
 
-                document.getElementById('btn-back-list').onclick = () => { if (state.busListListener) activeRef.off('value',
-                        state.busListListener);
+                document.getElementById('btn-back-list').onclick = () => { if (state.listeners.busList) { activeRef.off(
+                            'value', state.listeners.busList);
+                        state.listeners.busList = null; }
                     showView('view-lobby'); };
-                document.getElementById('btn-back-track').onclick = () => { if (state.msgListeners.passenger) msgRef.child(
-                        state.passenger.tracking).off('value', state.msgListeners.passenger);
+                document.getElementById('btn-back-track').onclick = () => { stopPassengerTracking();
                     showView('view-passenger-list'); };
-                announceRef.on('value', snap => {
-                    const v = snap.val();
-                    ['announce-list', 'announce-track', 'announce-driver'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) { el.style.display = v?.text ? 'block' : 'none'; if (v?.text) el.textContent =
-                                '📢 ' + v.text; }
-                    });
-                });
+
+                // 總管後台登入 (點擊dev-tag 5次)
                 let clicks = 0;
-                document.getElementById('dev-tag').onclick = () => {
-                    clicks++;
-                    if (clicks >= 5) { clicks = 0; const p = prompt('密碼：'); if (p === 'Fai64989786') alert(
-                            '總管後台未整合'); }
+                document.getElementById('dev-tag').onclick = () => { clicks++; if (clicks >= 5) { clicks = 0;
+                        adminLogin(); }
                     clearTimeout(window._devTimer);
-                    window._devTimer = setTimeout(() => clicks = 0, 3000);
-                };
+                    window._devTimer = setTimeout(() => clicks = 0, 3000); };
+
+                document.getElementById('btn-admin-logout').onclick = () => { state.adminAuthenticated = false;
+                    showView('view-lobby'); };
+                document.getElementById('btn-publish-announce').onclick = () => { const text = document.getElementById(
+                        'admin-announce-input').value.trim(); if (text) { announceRef.set({ text, ts: Date.now() })
+                        .then(() => toast('公告已發佈')); } else toast('請輸入公告內容'); };
+                document.getElementById('btn-clear-announce').onclick = () => { announceRef.remove().then(() => toast(
+                    '公告已清除')); };
+                document.getElementById('btn-clean-messages').onclick = () => { if (confirm(
+                        '確定要清理所有超過7天的訊息嗎？此操作不可撤銷。')) {
+                        const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                        msgRef.once('value').then(snap => { const data = snap.val() || {};
+                            const updates = {};
+                            Object.entries(data).forEach(([phone, msgs]) => { Object.entries(msgs).forEach(
+                                    ([key, m]) => { if (m.ts < cutoff) { updates[
+                                            `${phone}/${key}`] = null; } }); });
+                            if (Object.keys(updates).length > 0) { msgRef.update(updates).then(() => toast(
+                                    '清理完成')); } else toast('沒有需要清理的訊息'); }); } };
+
                 const params = new URLSearchParams(window.location.search);
-                if (params.has('passenger')) {
-                    state.passenger.name = params.get('passenger').trim();
+                if (params.has('passenger')) { state.passenger.name = params.get('passenger').trim();
                     localStorage.setItem('van_pass_name', state.passenger.name);
                     showView('view-passenger-list');
-                    renderBusList();
-                }
+                    renderBusList(); }
 
-                // 全局按鈕震動反饋（排除錄音按鈕，因為它們有自己的震動）
-                document.querySelectorAll('.btn:not(.record-btn)').forEach(btn => {
-                    btn.addEventListener('pointerdown', () => { if (navigator.vibrate) navigator.vibrate(
-                        15); });
-                    btn.addEventListener('touchstart', () => { if (navigator.vibrate) navigator.vibrate(
-                        15); }, { passive: true });
-                });
-                // 錄音按鈕的震動在startRec中處理
+                document.querySelectorAll('.btn').forEach(btn => { btn.addEventListener('pointerdown', () => { if (
+                        navigator.vibrate) navigator.vibrate(15); }); });
             });
 
-            window.addEventListener('beforeunload', () => {
-                if (state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId);
-                if (state.driver.phone) activeRef.child(state.driver.phone).remove();
-                teardownOldLayoutIdle();
-                // 清理錄音按鈕的document監聽器
-                ['btn-pass-record', 'btn-driver-record-overlay', 'btn-driver-record-old'].forEach(id => {
-                    const btn = document.getElementById(id);
-                    if (btn && btn._recCleanup) btn._recCleanup();
-                });
-                if (state.recorder?.state === 'recording') {
-                    try { state.recorder.stop(); } catch (e) {}
-                }
-            });
+            window.addEventListener('beforeunload', () => { stopGps();
+                cleanupDriverListeners();
+                stopPassengerTracking(); if (state.listeners.busList) activeRef.off('value', state.listeners.busList); });
         })();
     </script>
 </body>
