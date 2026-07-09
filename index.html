@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>西鐵小巴 v8.8.0 · 終極無瑕完美版</title>
+<title>西鐵小巴 v8.8.0 · 總管診斷完美版</title>
+<!-- 引入 Firebase 核心與資料庫 -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<!-- 🛡️ 安全引入 Firebase Authentication 認證模組 -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -184,12 +186,15 @@ body {
   <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
 </div>
 
+<!-- 隱私聲明橫幅 -->
 <div class="privacy-notice">
   ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
 </div>
 
+<!-- 浮動公告按鈕 -->
 <button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
 
+<!-- 公告詳情頁 -->
 <div class="announce-overlay" id="announce-overlay">
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
@@ -200,6 +205,7 @@ body {
   </div>
 </div>
 
+<!-- 大堂 -->
 <div id="view-lobby" class="view active">
   <div class="card" style="text-align:left;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -223,12 +229,14 @@ body {
   <div id="qr-box" class="card" style="display:none;"></div>
 </div>
 
+<!-- 乘客列表 -->
 <div id="view-passenger-list" class="view">
   <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
   <div id="bus-list-container">載入中…</div>
   <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
 </div>
 
+<!-- 乘客追蹤 -->
 <div id="view-passenger" class="view">
   <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
   <div class="card" id="pass-data-card">讀取中…</div>
@@ -245,11 +253,13 @@ body {
   <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
 </div>
 
+<!-- 司機頁 -->
 <div id="view-driver" class="view">
   <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
     <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
   </div>
   
+  <!-- 新版大掣面板 -->
   <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
     <div class="card" style="text-align:center; padding:12px;">
       <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
@@ -281,6 +291,7 @@ body {
     <div class="route-strip" id="d-route-strip-new"></div>
   </div>
 
+  <!-- 舊版三頁滾動 -->
   <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
     <div class="driver-snap-section" id="old-sec1">
       <div class="card">
@@ -322,6 +333,7 @@ body {
   <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
 </div>
 
+<!-- 訊息浮層 -->
 <div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
     <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
@@ -336,6 +348,7 @@ body {
   <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
 </div>
 
+<!-- 總管後台 -->
 <div id="view-admin" class="view">
   <div class="card admin-panel">
     <div class="title">🛡️ 總管後台控制台</div>
@@ -351,6 +364,7 @@ body {
       </div>
     </div>
 
+    <!-- 管理分頁 -->
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
       <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
@@ -358,11 +372,13 @@ body {
       <button class="admin-tab" data-tab="announce">📢 公告</button>
     </div>
 
+    <!-- 車輛管理 -->
     <div class="admin-section active" id="admin-section-vehicles">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
       <div id="admin-vehicle-list">載入中...</div>
     </div>
 
+    <!-- 封鎖管理 -->
     <div class="admin-section" id="admin-section-bans">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
       <div class="admin-announce-form admin-ban-form">
@@ -374,6 +390,7 @@ body {
       <div id="admin-ban-list">載入中...</div>
     </div>
 
+    <!-- 用戶紀錄 -->
     <div class="admin-section" id="admin-section-logs">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">📋 用戶操作紀錄</div>
       <div style="margin-bottom:8px;">
@@ -382,6 +399,7 @@ body {
       <div id="admin-log-list">載入中...</div>
     </div>
 
+    <!-- 公告管理 -->
     <div class="admin-section" id="admin-section-announce">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">📢 發布全局公告</div>
       <div class="admin-announce-form">
@@ -565,9 +583,7 @@ body {
       list.appendChild(div);
     });
     list.scrollTop = list.scrollHeight;
-    try {
-      if (Object.keys(updates).length) snap.ref.update(updates);
-    } catch(e) { console.warn("🛡️ 訊息過期清理被阻止（無寫入權限）"); }
+    if (Object.keys(updates).length) snap.ref.update(updates);
   };
 
   const updateAllDriverMessages = snap => {
@@ -710,7 +726,6 @@ body {
     });
   };
 
-  // 🛠️ 冒號語法完全修正版
   const refreshNewUI = async (upload) => {
     const st = state.driver, list = getStations(), now = cleanStation(list[st.idx]);
     const next = st.idx+1<list.length ? cleanStation(list[st.idx+1]) : '終點站';
@@ -741,7 +756,7 @@ body {
           plate: st.plate, 
           routeMode: st.mode==='busy'?'繁忙時段':'非繁忙',
           direction: dirText, 
-          rawStationName: list[st.idx], // ✅ 冒號對齊
+          rawStationName: list[st.idx],
           passenger: st.pass, 
           maxSeat: st.max, 
           full: st.full,
@@ -1206,7 +1221,7 @@ body {
         firebase.auth().signInWithEmailAndPassword(email, password)
           .then((userCredential) => {
             const user = userCredential.user;
-            // 🛡️ 完美整合：已自動將你的真實 UID 888H7rADoWcKwJwnGLw5tUqQP9E3 植入！
+            // 🛡️ 比對你的新 UID：888H7rADoWcKwJwnGLw5tUqQP9E3
             if(user.uid === '888H7rADoWcKwJwnGLw5tUqQP9E3') {
               toast('✅ 認證成功！歡迎總管');
               initAdmin();
@@ -1216,8 +1231,9 @@ body {
             }
           })
           .catch((error) => {
-            console.error("Auth Error:", error);
-            toast('❌ 認證失敗：帳號或密碼錯誤');
+            console.error("📋 總管認證詳細錯誤:", error);
+            // 🛠️ 【診斷加強雷達】：如果登入失敗，直接彈出雲端拒絕嘅原因，等大輝一眼睇清到底係咩問題！
+            alert('⚠️ Firebase 雲端拒絕登入！\n\n【錯誤代碼】: ' + error.code + '\n【詳細原因】: ' + error.message + '\n\n💡 常見原因：\n1. 密碼或Email輸入錯誤\n2. 忘記在 Firebase Console 開通 Email/Password 登入功能\n3. 帳號建立錯了專案');
           });
       }
       clearTimeout(window._devTimer); window._devTimer=setTimeout(()=>clicks=0,3000);
