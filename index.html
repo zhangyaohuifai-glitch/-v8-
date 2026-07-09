@@ -716,6 +716,347 @@ body {
   const bansRef = db.ref("van/bans");
   const userLogsRef = db.ref("van/user_logs");
 
+   font-size: 12px;
+  text-align: center;
+  border-bottom: 2px solid #ff453a;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.privacy-notice strong { color: #ffcc00; }
+
+/* 全局語音開關 */
+.global-voice-toggle {
+  position: absolute; top: 10px; right: 10px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--green); border: none; color: #fff;
+  font-size: 24px; cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s;
+}
+.global-voice-toggle.muted { background: var(--red); }
+
+/* 浮動公告按鈕 */
+.floating-announce {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--green); border: none; color: #fff;
+  font-size: 28px; cursor: pointer; z-index: 15;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  transition: all 0.3s;
+}
+.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
+@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
+.view.active { display: flex; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
+.btn {
+  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
+  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
+.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
+.btn-secondary { background: #3a3a3c; }
+.btn-warn { background: #ff9f0a; color: #000; }
+.btn-green { background: var(--green); }
+.btn-red { background: var(--red); }
+.row { display: flex; gap: 12px; margin-bottom: 10px; }
+.row > * { flex: 1; }
+.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
+.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
+.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
+.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
+.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
+.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
+.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
+.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
+
+/* 站點狀態樣式 */
+.dot-node.passed .dot { background: #666; border-color: #888; }
+.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
+.dot-node.current span { font-weight: 800; color: #fff; }
+.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
+.dot-node.next span { font-weight: 700; color: var(--green); }
+@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
+.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
+.msg-row {
+  display: flex; gap: 10px; align-items: center; justify-content: center;
+  max-width: 500px; margin: 0 auto 8px auto;
+}
+.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
+.record-btn, .send-btn {
+  width: 48px; height: 48px; border-radius: 14px; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
+}
+.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
+.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
+.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
+.record-btn.recording .record-timer { display: block; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
+.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
+.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
+.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
+.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+
+/* 公告頁面 */
+.announce-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.95); z-index: 30; display: none;
+  flex-direction: column; padding: 16px;
+}
+.announce-overlay.show { display: flex; }
+.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
+.announce-item {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  border-left: 4px solid var(--gold);
+}
+.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
+.announce-item .text { font-size: 16px; line-height: 1.5; }
+
+/* 總管後台樣式 */
+.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
+.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
+.admin-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+}
+.admin-stat-card {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
+}
+.admin-stat-card .label { font-size: 14px; color: #888; }
+.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
+.admin-vehicle-item, .admin-log-item, .admin-ban-item {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+  border-left: 4px solid var(--blue);
+}
+.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
+.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
+.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.admin-announce-form textarea, .admin-ban-form input {
+  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
+  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
+  resize: vertical;
+}
+.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
+.admin-tabs {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.admin-tab {
+  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
+  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
+  transition: all 0.3s;
+}
+.admin-tab.active { background: var(--gold); color: #000; }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">西鐵小巴 v8.8.0</div>
+  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
+  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
+</div>
+
+<!-- 隱私聲明橫幅 -->
+<div class="privacy-notice">
+  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
+</div>
+
+<!-- 浮動公告按鈕 -->
+<button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
+
+<!-- 公告詳情頁 -->
+<div class="announce-overlay" id="announce-overlay">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
+    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-announce-overlay">✕ 關閉</button>
+  </div>
+  <div class="announce-list" id="announce-list-content">
+    <div style="text-align:center; color:#888; padding:20px;">暫無公告</div>
+  </div>
+</div>
+
+<!-- 大堂 -->
+<div id="view-lobby" class="view active">
+  <div class="card" style="text-align:left;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
+      <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
+    </div>
+    <div style="margin-top:10px; color:#ccc; line-height:1.6;">
+      🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
+      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
+      🎤 <b>長按錄音</b> 可發送語音訊息<br>
+      📢 <b>公告</b>：點擊右下角橙色圖標查看系統公告
+    </div>
+  </div>
+  <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
+  <button class="btn btn-driver" id="btn-driver">🚏 司機入口</button>
+  <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
+  <div class="card" style="background:#2c1a3a; border-color:var(--gold);">
+    <div style="color:var(--gold);">☕ 支持開發者</div>
+    <div id="fps-code" style="background:#000; padding:10px; border-radius:12px; margin-top:8px; cursor:pointer;">轉數快：122891914</div>
+  </div>
+  <div id="qr-box" class="card" style="display:none;"></div>
+</div>
+
+<!-- 乘客列表 -->
+<div id="view-passenger-list" class="view">
+  <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
+  <div id="bus-list-container">載入中…</div>
+  <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
+</div>
+
+<!-- 乘客追蹤 -->
+<div id="view-passenger" class="view">
+  <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
+  <div class="card" id="pass-data-card">讀取中…</div>
+  <div class="route-strip" id="pass-route-strip"></div>
+  <div class="msg-area">
+    <div class="msg-list" id="pass-msg-list"></div>
+    <div class="msg-row">
+      <button class="record-btn" id="btn-pass-record">🎤<span class="record-timer" id="pass-timer">0s</span></button>
+      <input id="pass-msg-input" class="msg-input" placeholder="訊息…">
+      <button class="send-btn" id="btn-pass-send">發</button>
+    </div>
+    <button class="btn btn-secondary" id="btn-pass-clear">清除訊息</button>
+  </div>
+  <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
+</div>
+
+<!-- 司機頁 -->
+<div id="view-driver" class="view">
+  <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
+    <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
+  </div>
+  
+  <!-- 新版大掣面板 -->
+  <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
+    <div class="card" style="text-align:center; padding:12px;">
+      <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
+      <div style="margin:8px 0;">
+        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
+        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
+      </div>
+      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
+      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
+    </div>
+    <div class="card" style="text-align:center; padding:10px;">
+      <div style="font-size:20px; color:#aaa;">目前乘客</div>
+      <div class="big-number" id="d-pass-count-new">0</div>
+      <button class="btn btn-green" id="btn-add-pass-new" style="font-size:26px; padding:14px;">＋ 乘客</button>
+      <button class="btn btn-red" id="btn-sub-pass-new" style="font-size:26px; padding:14px;">－ 乘客</button>
+    </div>
+    <button class="btn btn-portal" id="btn-prev-new" style="font-size:24px; padding:16px;">◀ 上一站</button>
+    <button class="btn btn-portal" id="btn-next-new" style="font-size:24px; padding:16px;">下一站 ▶</button>
+    <div class="row">
+      <button class="btn" id="d-full-btn-new" style="font-size:22px; padding:14px;">🚫 滿座</button>
+      <button class="btn btn-secondary" id="d-car-btn-new" style="font-size:22px; padding:14px;">16座</button>
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:20px; padding:14px;">🔄 調頭</button>
+      <button class="btn" id="btn-mode-toggle-new" style="background:#bf5af2; font-size:20px; padding:14px;">切換路線</button>
+    </div>
+    <button id="start-gps-new" class="btn btn-green" style="font-size:24px; padding:16px;">🟢 開始當值 (GPS)</button>
+    <button id="stop-gps-new" class="btn btn-red" style="font-size:24px; padding:16px; display:none;">🔴 停止當值</button>
+    <div class="route-strip" id="d-route-strip-new"></div>
+  </div>
+
+  <!-- 舊版三頁滾動 -->
+  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
+    <div class="driver-snap-section" id="old-sec1">
+      <div class="card">
+        <div id="d-info-old">手機: 未登入 | 車牌: 未輸入</div>
+        <div id="d-mode-display-old" style="display:inline-block; padding:10px 24px; border-radius:24px; background:#9333ea; font-size:22px; font-weight:bold; margin-bottom:10px;">繁忙時段西鐵快線</div>
+        <div id="d-dir-display-old" style="display:inline-block; padding:12px 28px; border-radius:28px; font-size:24px; font-weight:bold; margin-bottom:10px; background:#ff3b30;">往 元朗</div>
+        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
+        <div class="row"><button id="btn-prev-old" class="btn btn-portal">◀ 上一站</button><button id="btn-next-old" class="btn btn-portal">下一站 ▶</button></div>
+        <div id="d-distance-old"></div>
+      </div>
+      <div class="row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙時段</button></div>
+      <button id="start-gps-old" class="btn btn-green">🟢 開始當值</button>
+      <button id="stop-gps-old" class="btn btn-red" style="display:none;">🔴 停止當值</button>
+      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
+      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
+    </div>
+    <div class="driver-snap-section" id="old-sec2">
+      <div class="card">
+        <div>目前乘客數</div>
+        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
+        <div class="row"><button class="btn btn-green" id="btn-add-pass-old">＋</button><button class="btn btn-red" id="btn-sub-pass-old">－</button></div>
+        <div class="row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
+        <button id="d-fullBtn-old" class="btn btn-green" style="font-size:24px;">滿座</button>
+      </div>
+    </div>
+    <div class="driver-snap-section" id="old-sec3">
+      <div class="msg-area">
+        <div class="msg-list" id="driver-msg-list-old"></div>
+        <div class="msg-row">
+          <button class="record-btn" id="btn-driver-record-old">🎤<span class="record-timer" id="driver-timer-old">0s</span></button>
+          <input id="driver-msg-input-old" class="msg-input" placeholder="廣播訊息…">
+          <button class="send-btn" id="btn-driver-send-old">發</button>
+        </div>
+        <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
+      </div>
+      <button class="btn btn-secondary" id="btn-driver-clear-old">清除訊息</button>
+    </div>
+  </div>
+  <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
+</div>
+
+<!-- 訊息浮層 -->
+<div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
+    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-msg-overlay">✕ 關閉</button>
+  </div>
+  <div class="msg-list" id="driver-msg-list-overlay" style="flex:1; background:#1a1a1a; border-radius:14px; padding:10px;"></div>
+  <div class="msg-row" style="margin-top:10px;">
+    <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="record-timer" id="driver-timer-overlay">0s</span></button>
+    <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
+    <button class="send-btn" id="btn-driver-send-overlay">發</button>
+  </div>
+  <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function() {
+  const setVh = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  setVh();
+  window.addEventListener('resize', setVh);
+
+  // 完美對接：大輝全新專案 (van--v8) 配置核心
+  firebase.initializeApp({
+    apiKey: "AIzaSyDYHeDflIorQOlx3LyD8b_t9ZUc8zGBLek",
+    authDomain: "van--v8.firebaseapp.com",
+    databaseURL: "https://van--v8-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "van--v8",
+    storageBucket: "van--v8.firebasestorage.app",
+    messagingSenderId: "739568670159",
+    appId: "1:739568670159:web:bb84717a5524be14286eba",
+    measurementId: "G-9XJTHW4JWV"
+  });
+  
+  const db = firebase.database();
+  const activeRef = db.ref("van/active_buses");
+  const msgRef = db.ref("van/messages");
+  const announceRef = db.ref("van/announcements");
+  const bansRef = db.ref("van/bans");
+  const userLogsRef = db.ref("van/user_logs");
+
    border-bottom: 2px solid #ff453a;
   flex-shrink: 0;
   line-height: 1.4;
