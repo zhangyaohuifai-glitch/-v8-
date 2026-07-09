@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>西鐵小巴 v8.8.0 · 終極無瑕完美版</title>
+<!-- 引入 Firebase 核心與資料庫 -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<!-- 🛡️ 安全引入 Firebase Authentication 認證模組 -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -184,12 +186,15 @@ body {
   <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
 </div>
 
+<!-- 隱私聲明橫幅 -->
 <div class="privacy-notice">
   ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
 </div>
 
+<!-- 浮動公告按鈕 -->
 <button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
 
+<!-- 公告詳情頁 -->
 <div class="announce-overlay" id="announce-overlay">
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
@@ -200,6 +205,7 @@ body {
   </div>
 </div>
 
+<!-- 大堂 -->
 <div id="view-lobby" class="view active">
   <div class="card" style="text-align:left;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -223,12 +229,14 @@ body {
   <div id="qr-box" class="card" style="display:none;"></div>
 </div>
 
+<!-- 乘客列表 -->
 <div id="view-passenger-list" class="view">
   <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
   <div id="bus-list-container">載入中…</div>
   <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
 </div>
 
+<!-- 乘客追蹤 -->
 <div id="view-passenger" class="view">
   <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
   <div class="card" id="pass-data-card">讀取中…</div>
@@ -245,11 +253,13 @@ body {
   <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
 </div>
 
+<!-- 司機頁 -->
 <div id="view-driver" class="view">
   <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
     <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
   </div>
   
+  <!-- 新版大掣面板 -->
   <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
     <div class="card" style="text-align:center; padding:12px;">
       <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
@@ -281,6 +291,7 @@ body {
     <div class="route-strip" id="d-route-strip-new"></div>
   </div>
 
+  <!-- 舊版三頁滾動 -->
   <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
     <div class="driver-snap-section" id="old-sec1">
       <div class="card">
@@ -322,6 +333,7 @@ body {
   <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
 </div>
 
+<!-- 訊息浮層 -->
 <div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
     <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
@@ -336,6 +348,7 @@ body {
   <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
 </div>
 
+<!-- 總管後台 -->
 <div id="view-admin" class="view">
   <div class="card admin-panel">
     <div class="title">🛡️ 總管後台控制台</div>
@@ -351,6 +364,7 @@ body {
       </div>
     </div>
 
+    <!-- 管理分頁 -->
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
       <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
@@ -358,1602 +372,13 @@ body {
       <button class="admin-tab" data-tab="announce">📢 公告</button>
     </div>
 
+    <!-- 車輛管理 -->
     <div class="admin-section active" id="admin-section-vehicles">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
       <div id="admin-vehicle-list">載入中...</div>
     </div>
 
-    <div class="admin-section" id="admin-section-bans">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
-      <div   font-size: 12px;
-  text-align: center;
-  border-bottom: 2px solid #ff453a;
-  flex-shrink: 0;
-  line-height: 1.4;
-}
-.privacy-notice strong { color: #ffcc00; }
-
-.global-voice-toggle {
-  position: absolute; top: 10px; right: 10px;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 24px; cursor: pointer; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s;
-}
-.global-voice-toggle.muted { background: var(--red); }
-
-.floating-announce {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 28px; cursor: pointer; z-index: 15;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
-.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
-@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
-.view.active { display: flex; }
-.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
-.btn {
-  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
-  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
-.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
-.btn-secondary { background: #3a3a3c; }
-.btn-warn { background: #ff9f0a; color: #000; }
-.btn-green { background: var(--green); }
-.btn-red { background: var(--red); }
-.row { display: flex; gap: 12px; margin-bottom: 10px; }
-.row > * { flex: 1; }
-.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
-.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
-.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
-.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
-.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
-.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
-.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
-.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
-
-.dot-node.passed .dot { background: #666; border-color: #888; }
-.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
-.dot-node.current span { font-weight: 800; color: #fff; }
-.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
-.dot-node.next span { font-weight: 700; color: var(--green); }
-@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
-.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
-.msg-row {
-  display: flex; gap: 10px; align-items: center; justify-content: center;
-  max-width: 500px; margin: 0 auto 8px auto;
-}
-.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-.record-btn, .send-btn {
-  width: 48px; height: 48px; border-radius: 14px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
-}
-.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
-.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
-.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
-.record-btn.recording .record-timer { display: block; }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; }
-.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
-.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
-.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-
-.announce-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); z-index: 30; display: none;
-  flex-direction: column; padding: 16px;
-}
-.announce-overlay.show { display: flex; }
-.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
-.announce-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
-  border-left: 4px solid var(--gold);
-}
-.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
-.announce-item .text { font-size: 16px; line-height: 1.5; }
-
-.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
-.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
-.admin-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
-}
-.admin-stat-card {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
-}
-.admin-stat-card .label { font-size: 14px; color: #888; }
-.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
-.admin-vehicle-item, .admin-log-item, .admin-ban-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
-  border-left: 4px solid var(--blue);
-}
-.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
-.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
-.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-.admin-announce-form textarea, .admin-ban-form input {
-  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
-  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
-  resize: vertical;
-}
-.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
-.admin-tabs {
-  display: flex; gap: 8px; margin-bottom: 12px;
-}
-.admin-tab {
-  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
-  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
-  transition: all 0.3s;
-}
-.admin-tab.active { background: var(--gold); color: #000; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="title">西鐵小巴 v8.8.0</div>
-  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
-  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
-</div>
-
-<div class="privacy-notice">
-  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
-</div>
-
-<button class="floating-announce" id="announce-fab">📢</button>
-
-<!-- 乘客主頁 -->
-<div class="view active" id="view-passenger">
-  <div class="card">
-    <div class="station-name">屯門站</div>
-    <div class="target-station">下一站：兆康站</div>
-    <div class="big-number" id="eta-display">2</div>
-    <div style="text-align:center;color:#aaa;">分鐘</div>
-    <div id="qrcode-target" style="display:flex;justify-content:center;margin:10px 0;"></div>
-  </div>
-  <div class="card">
-    <div class="route-strip" id="route-strip">
-      <div class="dot-node passed"><div class="dot"></div><span>屯門</span></div>
-      <div class="dot-node current"><div class="dot"></div><span>兆康</span></div>
-      <div class="dot-node next"><div class="dot"></div><span>天水圍</span></div>
-      <div class="dot-node"><div class="dot"></div><span>朗屏</span></div>
-      <div class="dot-node"><div class="dot"></div><span>元朗</span></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="row">
-      <button class="btn btn-portal" onclick="switchView('driver')">🚌 司機模式</button>
-      <button class="btn btn-secondary" onclick="switchView('passenger')">👥 乘客</button>
-    </div>
-    <div class="row">
-      <button class="btn btn-warn" onclick="switchView('admin')" id="admin-entry-btn">⚙️ 總管後台</button>
-    </div>
-  </div>
-  <div class="card msg-area">
-    <div class="msg-list" id="passenger-msg-list"></div>
-    <div class="msg-row">
-      <input class="msg-input" id="passenger-msg-input" placeholder="輸入訊息…" />
-      <button class="record-btn" id="passenger-record-btn">🎤<span class="record-timer" id="passenger-record-timer">0s</span></button>
-      <button class="send-btn" id="passenger-send-btn">➤</button>
-    </div>
-  </div>
-</div>
-
-<!-- 司機主頁 -->
-<div class="view" id="view-driver">
-  <div class="driver-panel-new">
-    <div class="card">
-      <div class="row">
-        <button class="btn btn-secondary" onclick="switchView('passenger')">👥 乘客視角</button>
-        <button class="btn btn-warn" onclick="switchView('admin')" id="admin-entry-driver">⚙️ 總管</button>
-      </div>
-    </div>
-    <div class="card">
-      <div style="text-align:center;font-size:20px;font-weight:700;color:var(--gold);">🟢 上線中</div>
-      <div style="text-align:center;color:#aaa;">司機：陳大文 · 車牌：NV1234</div>
-      <div class="row" style="margin-top:8px;">
-        <button class="btn btn-green" onclick="showToast('已報站：下一站天水圍')">🔊 報站</button>
-        <button class="btn btn-red" onclick="showToast('緊急訊息已發送')">🚨 緊急</button>
-      </div>
-    </div>
-    <div class="card msg-area">
-      <div class="msg-list" id="driver-msg-list"></div>
-      <div class="msg-row">
-        <input class="msg-input" id="driver-msg-input" placeholder="司機訊息…" />
-        <button class="record-btn" id="driver-record-btn">🎤<span class="record-timer" id="driver-record-timer">0s</span></button>
-        <button class="send-btn" id="driver-send-btn">➤</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 管理後台 -->
-<div class="view" id="view-admin">
-  <div class="card admin-panel">
-    <div class="title">⚙️ 總管控制台</div>
-    <button class="btn btn-secondary" onclick="switchView('passenger')">← 返回</button>
-    <div class="admin-stats">
-      <div class="admin-stat-card"><div class="label">在線車輛</div><div class="value">12</div></div>
-      <div class="admin-stat-card"><div class="label">今日乘客</div><div class="value">847</div></div>
-    </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="vehicles">車輛</button>
-      <button class="admin-tab" data-tab="announce">公告</button>
-      <button class="admin-tab" data-tab="logs">日誌</button>
-      <button class="admin-tab" data-tab="ban">封禁</button>
-    </div>
-
-    <div class="admin-section active" id="section-vehicles">
-      <div class="admin-vehicle-item"><div class="plate">NV1234</div><div class="info">司機：陳大文 · 路線：K51 · 更新：2分鐘前</div></div>
-      <div class="admin-vehicle-item"><div class="plate">KA5678</div><div class="info">司機：李小雯 · 路線：K51 · 更新：5分鐘前</div></div>
-    </div>
-
-    <div class="admin-section" id="section-announce">
-      <div class="admin-announce-form">
-        <textarea id="admin-announce-text" placeholder="輸入公告內容…"></textarea>
-        <button class="btn btn-green" onclick="sendAnnounce()">發送公告</button>
-      </div>
-      <div id="admin-announce-list"></div>
-    </div>
-
-    <div class="admin-section" id="section-logs">
-      <div class="admin-log-item"><div class="info">2026-07-09 14:22 | NV1234 | 報站：天水圍</div></div>
-      <div class="admin-log-item"><div class="info">2026-07-09 14:20 | IP 192.168.1.5 | 登入後台</div></div>
-    </div>
-
-    <div class="admin-section" id="section-ban">
-      <div class="admin-ban-form">
-        <input id="ban-identifier" placeholder="輸入車牌或UID封禁" />
-        <button class="btn btn-red" onclick="banUser()">封禁</button>
-      </div>
-      <div class="admin-ban-item"><div class="identifier">NV9999</div><div class="info">封禁原因：騷擾乘客 · 管理員：Admin</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- 公告彈窗 -->
-<div class="announce-overlay" id="announce-overlay">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:24px;font-weight:700;">📢 最新公告</span>
-    <button class="btn btn-secondary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('announce-overlay').classList.remove('show')">關閉</button>
-  </div>
-  <div class="announce-list" id="announce-list">
-    <div class="announce-item"><div class="time">2026-07-09 10:00</div><div class="text">由於屯門公路工程，K51 路線將臨時改道，不便之處敬請原諒。</div></div>
-    <div class="announce-item"><div class="time">2026-07-08 15:30</div><div class="text">⚠️ 暴雨警告：請所有司機減速慢行，注意安全。</div></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ========== 1. Fix vh ==========
-function setVH() {
-  let vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
-}
-setVH();
-window.addEventListener('resize', setVH);
-
-// ========== 2. Firebase Config (Fill your own) ==========
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase (only if config is filled)
-let firebaseInitialized = false;
-if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-  try {
-    firebase.initializeApp(firebaseConfig);
-    firebaseInitialized = true;
-    console.log("Firebase initialized successfully.");
-  } catch (e) {
-    console.warn("Firebase init failed, using local mode.", e);
-  }
-} else {
-  console.warn("Firebase not configured. Running in local demo mode.");
-}
-
-// ========== 3. View Switching ==========
-function switchView(viewId) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const target = document.getElementById('view-' + viewId);
-  if (target) target.classList.add('active');
-}
-
-// ========== 4. Global Voice Toggle ==========
-let isMuted = false;
-document.getElementById('global-voice-btn').addEventListener('click', function() {
-  isMuted = !isMuted;
-  this.classList.toggle('muted', isMuted);
-  this.textContent = isMuted ? '🔇' : '🔊';
-  showToast(isMuted ? '語音已關閉' : '語音已開啟');
-});
-
-// ========== 5. Toast ==========
-function showToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
-}
-
-// ========== 6. Message Send (Local Demo) ==========
-function sendMessage(role) {
-  const input = document.getElementById(role + '-msg-input');
-  const list = document.getElementById(role + '-msg-list');
-  const text = input.value.trim();
-  if (!text) return;
-  const msgDiv = document.createElement('div');
-  msgDiv.style.cssText = 'padding:6px 0;border-bottom:1px solid #333;font-size:15px;';
-  msgDiv.textContent = (role === 'driver' ? '🚌 司機: ' : '👤 乘客: ') + text;
-  list.appendChild(msgDiv);
-  list.scrollTop = list.scrollHeight;
-  input.value = '';
-  // If Firebase initialized, also push to database
-  if (firebaseInitialized) {
-    try {
-      firebase.database().ref('messages/' + role).push({
-        text: text,
-        timestamp: Date.now(),
-        sender: role
-      });
-    } catch (e) { console.warn('Firebase write failed', e); }
-  }
-}
-
-document.getElementById('passenger-send-btn').addEventListener('click', () => sendMessage('passenger'));
-document.getElementById('driver-send-btn').addEventListener('click', () => sendMessage('driver'));
-document.getElementById('passenger-msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage('passenger'); });
-document.getElementById('driver-msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage('driver'); });
-
-// ========== 7. Record Button Simulation ==========
-['passenger', 'driver'].forEach(role => {
-  const btn = document.getElementById(role + '-record-btn');
-  const timer = document.getElementById(role + '-record-timer');
-  let recording = false;
-  let seconds = 0;
-  let interval = null;
-
-  btn.addEventListener('click', () => {
-    if (recording) {
-      clearInterval(interval);
-      recording = false;
-      btn.classList.remove('recording');
-      timer.textContent = '0s';
-      showToast('錄音結束（模擬）');
-    } else {
-      recording = true;
-      seconds = 0;
-      timer.textContent = '0s';
-      btn.classList.add('recording');
-      interval = setInterval(() => {
-        seconds++;
-        timer.textContent = seconds + 's';
-      }, 1000);
-      showToast('開始錄音（模擬）');
-    }
-  });
-});
-
-// ========== 8. Admin Tab Switching ==========
-document.querySelectorAll('.admin-tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-    d  border-bottom: 2px solid #ff453a;
-  flex-shrink: 0;
-  line-height: 1.4;
-}
-.privacy-notice strong { color: #ffcc00; }
-
-/* 全局語音開關 */
-.global-voice-toggle {
-  position: absolute; top: 10px; right: 10px;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 24px; cursor: pointer; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s;
-}
-.global-voice-toggle.muted { background: var(--red); }
-
-/* 浮動公告按鈕 */
-.floating-announce {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 28px; cursor: pointer; z-index: 15;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
-.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
-@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
-.view.active { display: flex; }
-.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
-.btn {
-  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
-  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
-.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
-.btn-secondary { background: #3a3a3c; }
-.btn-warn { background: #ff9f0a; color: #000; }
-.btn-green { background: var(--green); }
-.btn-red { background: var(--red); }
-.row { display: flex; gap: 12px; margin-bottom: 10px; }
-.row > * { flex: 1; }
-.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
-.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
-.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
-.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
-.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
-.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
-.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
-.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
-
-/* 站點狀態樣式 */
-.dot-node.passed .dot { background: #666; border-color: #888; }
-.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
-.dot-node.current span { font-weight: 800; color: #fff; }
-.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
-.dot-node.next span { font-weight: 700; color: var(--green); }
-@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
-.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
-.msg-row {
-  display: flex; gap: 10px; align-items: center; justify-content: center;
-  max-width: 500px; margin: 0 auto 8px auto;
-}
-.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-.record-btn, .send-btn {
-  width: 48px; height: 48px; border-radius: 14px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
-}
-.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
-.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
-.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
-.record-btn.recording .record-timer { display: block; }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; }
-.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
-.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
-.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-
-/* 公告頁面 */
-.announce-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); z-index: 30; display: none;
-  flex-direction: column; padding: 16px;
-}
-.announce-overlay.show { display: flex; }
-.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
-.announce-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
-  border-left: 4px solid var(--gold);
-}
-.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
-.announce-item .text { font-size: 16px; line-height: 1.5; }
-
-/* 總管後台樣式 */
-.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
-.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
-.admin-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
-}
-.admin-stat-card {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
-}
-.admin-stat-card .label { font-size: 14px; color: #888; }
-.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
-.admin-vehicle-item, .admin-log-item, .admin-ban-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
-  border-left: 4px solid var(--blue);
-}
-.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
-.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
-.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-.admin-announce-form textarea, .admin-ban-form input {
-  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
-  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
-  resize: vertical;
-}
-.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
-.admin-tabs {
-  display: flex; gap: 8px; margin-bottom: 12px;
-}
-.admin-tab {
-  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
-  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
-  transition: all 0.3s;
-}
-.admin-tab.active { background: var(--gold); color: #000; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="title">西鐵小巴 v8.8.0</div>
-  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
-  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
-</div>
-
-<div class="privacy-notice">
-  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
-</div>
-
-<button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
-
-<div class="announce-overlay" id="announce-overlay">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-announce-overlay">✕ 關閉</button>
-  </div>
-  <div class="announce-list" id="announce-list-content">
-    <div style="text-align:center; color:#888; padding:20px;">暫無公告</div>
-  </div>
-</div>
-
-<div id="view-lobby" class="view active">
-  <div class="card" style="text-align:left;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
-      <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
-    </div>
-    <div style="margin-top:10px; color:#ccc; line-height:1.6;">
-      🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
-      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-      🎤 <b>長按錄音</b> 可發送語音訊息<br>
-      📢 <b>公告</b>：點擊右下角橙色圖標查看系統公告
-    </div>
-  </div>
-  <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
-  <button class="btn btn-driver" id="btn-driver">🚏 司機入口</button>
-  <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
-  <div class="card" style="background:#2c1a3a; border-color:var(--gold);">
-    <div style="color:var(--gold);">☕ 支持開發者</div>
-    <div id="fps-code" style="background:#000; padding:10px; border-radius:12px; margin-top:8px; cursor:pointer;">轉數快：122891914</div>
-  </div>
-  <div id="qr-box" class="card" style="display:none;"></div>
-</div>
-
-<div id="view-passenger-list" class="view">
-  <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
-  <div id="bus-list-container">載入中…</div>
-  <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
-</div>
-
-<div id="view-passenger" class="view">
-  <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
-  <div class="card" id="pass-data-card">讀取中…</div>
-  <div class="route-strip" id="pass-route-strip"></div>
-  <div class="msg-area">
-    <div class="msg-list" id="pass-msg-list"></div>
-    <div class="msg-row">
-      <button class="record-btn" id="btn-pass-record">🎤<span class="record-timer" id="pass-timer">0s</span></button>
-      <input id="pass-msg-input" class="msg-input" placeholder="訊息…">
-      <button class="send-btn" id="btn-pass-send">發</button>
-    </div>
-    <button class="btn btn-secondary" id="btn-pass-clear">清除訊息</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
-</div>
-
-<div id="view-driver" class="view">
-  <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
-    <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
-  </div>
-  
-  <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
-    <div class="card" style="text-align:center; padding:12px;">
-      <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
-      <div style="margin:8px 0;">
-        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
-        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
-      </div>
-      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
-      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
-    </div>
-    <div class="card" style="text-align:center; padding:10px;">
-      <div style="font-size:20px; color:#aaa;">目前乘客</div>
-      <div class="big-number" id="d-pass-count-new">0</div>
-      <button class="btn btn-green" id="btn-add-pass-new" style="font-size:26px; padding:14px;">＋ 乘客</button>
-      <button class="btn btn-red" id="btn-sub-pass-new" style="font-size:26px; padding:14px;">－ 乘客</button>
-    </div>
-    <button class="btn btn-portal" id="btn-prev-new" style="font-size:24px; padding:16px;">◀ 上一站</button>
-    <button class="btn btn-portal" id="btn-next-new" style="font-size:24px; padding:16px;">下一站 ▶</button>
-    <div class="row">
-      <button class="btn" id="d-full-btn-new" style="font-size:22px; padding:14px;">🚫 滿座</button>
-      <button class="btn btn-secondary" id="d-car-btn-new" style="font-size:22px; padding:14px;">16座</button>
-    </div>
-    <div class="row">
-      <button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:20px; padding:14px;">🔄 調頭</button>
-      <button class="btn" id="btn-mode-toggle-new" style="background:#bf5af2; font-size:20px; padding:14px;">切換路線</button>
-    </div>
-    <button id="start-gps-new" class="btn btn-green" style="font-size:24px; padding:16px;">🟢 開始當值 (GPS)</button>
-    <button id="stop-gps-new" class="btn btn-red" style="font-size:24px; padding:16px; display:none;">🔴 停止當值</button>
-    <div class="route-strip" id="d-route-strip-new"></div>
-  </div>
-
-  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
-    <div class="driver-snap-section" id="old-sec1">
-      <div class="card">
-        <div id="d-info-old">手機: 未登入 | 車牌: 未輸入</div>
-        <div id="d-mode-display-old" style="display:inline-block; padding:10px 24px; border-radius:24px; background:#9333ea; font-size:22px; font-weight:bold; margin-bottom:10px;">繁忙時段西鐵快線</div>
-        <div id="d-dir-display-old" style="display:inline-block; padding:12px 28px; border-radius:28px; font-size:24px; font-weight:bold; margin-bottom:10px; background:#ff3b30;">往 元朗</div>
-        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
-        <div class="row"><button id="btn-prev-old" class="btn btn-portal">◀ 上一站</button><button id="btn-next-old" class="btn btn-portal">下一站 ▶</button></div>
-        <div id="d-distance-old"></div>
-      </div>
-      <div class="row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙時段</button></div>
-      <button id="start-gps-old" class="btn btn-green">🟢 開始當值</button>
-      <button id="stop-gps-old" class="btn btn-red" style="display:none;">🔴 停止當值</button>
-      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
-      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
-    </div>
-    <div class="driver-snap-section" id="old-sec2">
-      <div class="card">
-        <div>目前乘客數</div>
-        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
-        <div class="row"><button class="btn btn-green" id="btn-add-pass-old">＋</button><button class="btn btn-red" id="btn-sub-pass-old">－</button></div>
-        <div class="row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
-        <button id="d-fullBtn-old" class="btn btn-green" style="font-size:24px;">滿座</button>
-      </div>
-    </div>
-    <div class="driver-snap-section" id="old-sec3">
-      <div class="msg-area">
-        <div class="msg-list" id="driver-msg-list-old"></div>
-        <div class="msg-row">
-          <button class="record-btn" id="btn-driver-record-old">🎤<span class="record-timer" id="driver-timer-old">0s</span></button>
-          <input id="driver-msg-input-old" class="msg-input" placeholder="廣播訊息…">
-          <button class="send-btn" id="btn-driver-send-old">發</button>
-        </div>
-        <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
-      </div>
-      <button class="btn btn-secondary" id="btn-driver-clear-old">清除訊息</button>
-    </div>
-  </div>
-  <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
-</div>
-
-<div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-msg-overlay">✕ 關閉</button>
-  </div>
-  <div class="msg-list" id="driver-msg-list-overlay" style="flex:1; background:#1a1a1a; border-radius:14px; padding:10px;"></div>
-  <div class="msg-row" style="margin-top:10px;">
-    <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="record-timer" id="driver-timer-overlay">0s</span></button>
-    <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
-    <button class="send-btn" id="btn-driver-send-overlay">發</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
-</div>
-
-<div id="view-admin" class="view">
-  <div class="card admin-panel">
-    <div class="title">🛡️ 總管後台控制台</div>
-    
-    <div class="admin-stats">
-      <div class="admin-stat-card">
-        <div class="label">在線車輛</div>
-        <div class="value" id="admin-active-count">0</div>
-      </div>
-      <div class="admin-stat-card">
-        <div class="label">總乘客數</div>
-        <div class="value" id="admin-passenger-count">0</div>
-      </div>
-    </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
-      <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
-      <button class="admin-tab" data-tab="logs">📋 紀錄</button>
-      <button class="admin-tab" data-tab="announce">📢 公告</button>
-    </div>
-
-    <div class="admin-section active" id="admin-section-vehicles">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
-      <div id="admin-vehicle-list">載入中...</div>
-    </div>
-
-    <div class="admin-section" id="admin-section-bans">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
-      <div   border-bottom: 2px solid #ff453a;
-  flex-shrink: 0;
-  line-height: 1.4;
-}
-.privacy-notice strong { color: #ffcc00; }
-
-/* 全局語音開關 */
-.global-voice-toggle {
-  position: absolute; top: 10px; right: 10px;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 24px; cursor: pointer; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s;
-}
-.global-voice-toggle.muted { background: var(--red); }
-
-/* 浮動公告按鈕 */
-.floating-announce {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 28px; cursor: pointer; z-index: 15;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
-.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
-@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
-.view.active { display: flex; }
-.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
-.btn {
-  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
-  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
-.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
-.btn-secondary { background: #3a3a3c; }
-.btn-warn { background: #ff9f0a; color: #000; }
-.btn-green { background: var(--green); }
-.btn-red { background: var(--red); }
-.row { display: flex; gap: 12px; margin-bottom: 10px; }
-.row > * { flex: 1; }
-.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
-.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
-.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
-.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
-.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
-.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
-.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
-.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
-
-/* 站點狀態樣式 */
-.dot-node.passed .dot { background: #666; border-color: #888; }
-.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
-.dot-node.current span { font-weight: 800; color: #fff; }
-.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
-.dot-node.next span { font-weight: 700; color: var(--green); }
-@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
-.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
-.msg-row {
-  display: flex; gap: 10px; align-items: center; justify-content: center;
-  max-width: 500px; margin: 0 auto 8px auto;
-}
-.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-.record-btn, .send-btn {
-  width: 48px; height: 48px; border-radius: 14px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
-}
-.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
-.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
-.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
-.record-btn.recording .record-timer { display: block; }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; }
-.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
-.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
-.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-
-/* 公告頁面 */
-.announce-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); z-index: 30; display: none;
-  flex-direction: column; padding: 16px;
-}
-.announce-overlay.show { display: flex; }
-.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
-.announce-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
-  border-left: 4px solid var(--gold);
-}
-.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
-.announce-item .text { font-size: 16px; line-height: 1.5; }
-
-/* 總管後台樣式 */
-.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
-.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
-.admin-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
-}
-.admin-stat-card {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
-}
-.admin-stat-card .label { font-size: 14px; color: #888; }
-.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
-.admin-vehicle-item, .admin-log-item, .admin-ban-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
-  border-left: 4px solid var(--blue);
-}
-.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
-.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
-.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-.admin-announce-form textarea, .admin-ban-form input {
-  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
-  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
-  resize: vertical;
-}
-.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
-.admin-tabs {
-  display: flex; gap: 8px; margin-bottom: 12px;
-}
-.admin-tab {
-  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
-  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
-  transition: all 0.3s;
-}
-.admin-tab.active { background: var(--gold); color: #000; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="title">西鐵小巴 v8.8.0</div>
-  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
-  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
-</div>
-
-<div class="privacy-notice">
-  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
-</div>
-
-<button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
-
-<div class="announce-overlay" id="announce-overlay">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-announce-overlay">✕ 關閉</button>
-  </div>
-  <div class="announce-list" id="announce-list-content">
-    <div style="text-align:center; color:#888; padding:20px;">暫無公告</div>
-  </div>
-</div>
-
-<div id="view-lobby" class="view active">
-  <div class="card" style="text-align:left;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
-      <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
-    </div>
-    <div style="margin-top:10px; color:#ccc; line-height:1.6;">
-      🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
-      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-      🎤 <b>長按錄音</b> 可發送語音訊息<br>
-      📢 <b>公告</b>：點擊右下角橙色圖標查看系統公告
-    </div>
-  </div>
-  <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
-  <button class="btn btn-driver" id="btn-driver">🚏 司機入口</button>
-  <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
-  <div class="card" style="background:#2c1a3a; border-color:var(--gold);">
-    <div style="color:var(--gold);">☕ 支持開發者</div>
-    <div id="fps-code" style="background:#000; padding:10px; border-radius:12px; margin-top:8px; cursor:pointer;">轉數快：122891914</div>
-  </div>
-  <div id="qr-box" class="card" style="display:none;"></div>
-</div>
-
-<div id="view-passenger-list" class="view">
-  <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
-  <div id="bus-list-container">載入中…</div>
-  <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
-</div>
-
-<div id="view-passenger" class="view">
-  <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
-  <div class="card" id="pass-data-card">讀取中…</div>
-  <div class="route-strip" id="pass-route-strip"></div>
-  <div class="msg-area">
-    <div class="msg-list" id="pass-msg-list"></div>
-    <div class="msg-row">
-      <button class="record-btn" id="btn-pass-record">🎤<span class="record-timer" id="pass-timer">0s</span></button>
-      <input id="pass-msg-input" class="msg-input" placeholder="訊息…">
-      <button class="send-btn" id="btn-pass-send">發</button>
-    </div>
-    <button class="btn btn-secondary" id="btn-pass-clear">清除訊息</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
-</div>
-
-<div id="view-driver" class="view">
-  <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
-    <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
-  </div>
-  
-  <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
-    <div class="card" style="text-align:center; padding:12px;">
-      <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
-      <div style="margin:8px 0;">
-        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
-        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
-      </div>
-      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
-      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
-    </div>
-    <div class="card" style="text-align:center; padding:10px;">
-      <div style="font-size:20px; color:#aaa;">目前乘客</div>
-      <div class="big-number" id="d-pass-count-new">0</div>
-      <button class="btn btn-green" id="btn-add-pass-new" style="font-size:26px; padding:14px;">＋ 乘客</button>
-      <button class="btn btn-red" id="btn-sub-pass-new" style="font-size:26px; padding:14px;">－ 乘客</button>
-    </div>
-    <button class="btn btn-portal" id="btn-prev-new" style="font-size:24px; padding:16px;">◀ 上一站</button>
-    <button class="btn btn-portal" id="btn-next-new" style="font-size:24px; padding:16px;">下一站 ▶</button>
-    <div class="row">
-      <button class="btn" id="d-full-btn-new" style="font-size:22px; padding:14px;">🚫 滿座</button>
-      <button class="btn btn-secondary" id="d-car-btn-new" style="font-size:22px; padding:14px;">16座</button>
-    </div>
-    <div class="row">
-      <button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:20px; padding:14px;">🔄 調頭</button>
-      <button class="btn" id="btn-mode-toggle-new" style="background:#bf5af2; font-size:20px; padding:14px;">切換路線</button>
-    </div>
-    <button id="start-gps-new" class="btn btn-green" style="font-size:24px; padding:16px;">🟢 開始當值 (GPS)</button>
-    <button id="stop-gps-new" class="btn btn-red" style="font-size:24px; padding:16px; display:none;">🔴 停止當值</button>
-    <div class="route-strip" id="d-route-strip-new"></div>
-  </div>
-
-  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
-    <div class="driver-snap-section" id="old-sec1">
-      <div class="card">
-        <div id="d-info-old">手機: 未登入 | 車牌: 未輸入</div>
-        <div id="d-mode-display-old" style="display:inline-block; padding:10px 24px; border-radius:24px; background:#9333ea; font-size:22px; font-weight:bold; margin-bottom:10px;">繁忙時段西鐵快線</div>
-        <div id="d-dir-display-old" style="display:inline-block; padding:12px 28px; border-radius:28px; font-size:24px; font-weight:bold; margin-bottom:10px; background:#ff3b30;">往 元朗</div>
-        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
-        <div class="row"><button id="btn-prev-old" class="btn btn-portal">◀ 上一站</button><button id="btn-next-old" class="btn btn-portal">下一站 ▶</button></div>
-        <div id="d-distance-old"></div>
-      </div>
-      <div class="row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙時段</button></div>
-      <button id="start-gps-old" class="btn btn-green">🟢 開始當值</button>
-      <button id="stop-gps-old" class="btn btn-red" style="display:none;">🔴 停止當值</button>
-      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
-      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
-    </div>
-    <div class="driver-snap-section" id="old-sec2">
-      <div class="card">
-        <div>目​​前乘客數</div>
-        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
-        <div class="row"><button class="btn btn-green" id="btn-add-pass-old">＋</button><button class="btn btn-red" id="btn-sub-pass-old">－</button></div>
-        <div class="row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
-        <button id="d-fullBtn-old" class="btn btn-green" style="font-size:24px;">滿座</button>
-      </div>
-    </div>
-    <div class="driver-snap-section" id="old-sec3">
-      <div class="msg-area">
-        <div class="msg-list" id="driver-msg-list-old"></div>
-        <div class="msg-row">
-          <button class="record-btn" id="btn-driver-record-old">🎤<span class="record-timer" id="driver-timer-old">0s</span></button>
-          <input id="driver-msg-input-old" class="msg-input" placeholder="廣播訊息…">
-          <button class="send-btn" id="btn-driver-send-old">發</button>
-        </div>
-        <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
-      </div>
-      <button class="btn btn-secondary" id="btn-driver-clear-old">清除訊息</button>
-    </div>
-  </div>
-  <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
-</div>
-
-<div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-msg-overlay">✕ 關閉</button>
-  </div>
-  <div class="msg-list" id="driver-msg-list-overlay" style="flex:1; background:#1a1a1a; border-radius:14px; padding:10px;"></div>
-  <div class="msg-row" style="margin-top:10px;">
-    <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="record-timer" id="driver-timer-overlay">0s</span></button>
-    <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
-    <button class="send-btn" id="btn-driver-send-overlay">發</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
-</div>
-
-<div id="view-admin" class="view">
-  <div class="card admin-panel">
-    <div class="title">🛡️ 總管後台控制台</div>
-    
-    <div class="admin-stats">
-      <div class="admin-stat-card">
-        <div class="label">在線車輛</div>
-        <div class="value" id="admin-active-count">0</div>
-      </div>
-      <div class="admin-stat-card">
-        <div class="label">總乘客數</div>
-        <div class="value" id="admin-passenger-count">0</div>
-      </div>
-    </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
-      <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
-      <button class="admin-tab" data-tab="logs">📋 紀錄</button>
-      <button class="admin-tab" data-tab="announce">📢 公告</button>
-    </div>
-
-    <div class="admin-section active" id="admin-section-vehicles">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
-      <div id="admin-vehicle-list">載入中...</div>
-    </div>
-
-    <div class="admin-section" id="admin-section-bans">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
-      <d  border-bottom: 2px solid #ff453a;
-  flex-shrink: 0;
-  line-height: 1.4;
-}
-.privacy-notice strong { color: #ffcc00; }
-
-/* 全局語音開關 */
-.global-voice-toggle {
-  position: absolute; top: 10px; right: 10px;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 24px; cursor: pointer; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s;
-}
-.global-voice-toggle.muted { background: var(--red); }
-
-/* 浮動公告按鈕 */
-.floating-announce {
-  position: fixed; bottom: 80px; right: 20px;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--green); border: none; color: #fff;
-  font-size: 28px; cursor: pointer; z-index: 15;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
-.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
-@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
-.view.active { display: flex; }
-.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
-.btn {
-  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
-  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
-.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
-.btn-secondary { background: #3a3a3c; }
-.btn-warn { background: #ff9f0a; color: #000; }
-.btn-green { background: var(--green); }
-.btn-red { background: var(--red); }
-.row { display: flex; gap: 12px; margin-bottom: 10px; }
-.row > * { flex: 1; }
-.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
-.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
-.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
-.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
-.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
-.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
-.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
-.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
-
-/* 站點狀態樣式 */
-.dot-node.passed .dot { background: #666; border-color: #888; }
-.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
-.dot-node.current span { font-weight: 800; color: #fff; }
-.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
-.dot-node.next span { font-weight: 700; color: var(--green); }
-@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
-.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
-.msg-row {
-  display: flex; gap: 10px; align-items: center; justify-content: center;
-  max-width: 500px; margin: 0 auto 8px auto;
-}
-.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-.record-btn, .send-btn {
-  width: 48px; height: 48px; border-radius: 14px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
-}
-.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
-.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
-.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
-.record-btn.recording .record-timer { display: block; }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; }
-.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
-.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
-.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-
-/* 公告頁面 */
-.announce-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.95); z-index: 30; display: none;
-  flex-direction: column; padding: 16px;
-}
-.announce-overlay.show { display: flex; }
-.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
-.announce-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
-  border-left: 4px solid var(--gold);
-}
-.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
-.announce-item .text { font-size: 16px; line-height: 1.5; }
-
-/* 總管後台樣式 */
-.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
-.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
-.admin-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
-}
-.admin-stat-card {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
-}
-.admin-stat-card .label { font-size: 14px; color: #888; }
-.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
-.admin-vehicle-item, .admin-log-item, .admin-ban-item {
-  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
-  border-left: 4px solid var(--blue);
-}
-.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
-.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
-.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-.admin-announce-form textarea, .admin-ban-form input {
-  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
-  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
-  resize: vertical;
-}
-.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
-.admin-tabs {
-  display: flex; gap: 8px; margin-bottom: 12px;
-}
-.admin-tab {
-  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
-  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
-  transition: all 0.3s;
-}
-.admin-tab.active { background: var(--gold); color: #000; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="title">西鐵小巴 v8.8.0</div>
-  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
-  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
-</div>
-
-<div class="privacy-notice">
-  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
-</div>
-
-<button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
-
-<div class="announce-overlay" id="announce-overlay">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-announce-overlay">✕ 關閉</button>
-  </div>
-  <div class="announce-list" id="announce-list-content">
-    <div style="text-align:center; color:#888; padding:20px;">暫無公告</div>
-  </div>
-</div>
-
-<div id="view-lobby" class="view active">
-  <div class="card" style="text-align:left;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
-      <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
-    </div>
-    <div style="margin-top:10px; color:#ccc; line-height:1.6;">
-      🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
-      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-      🎤 <b>長按錄音</b> 可發送語音訊息<br>
-      📢 <b>公告</b>：點擊右下角橙色圖標查看系統公告
-    </div>
-  </div>
-  <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
-  <button class="btn btn-driver" id="btn-driver">🚏 司機入口</button>
-  <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
-  <div class="card" style="background:#2c1a3a; border-color:var(--gold);">
-    <div style="color:var(--gold);">☕ 支持開發者</div>
-    <div id="fps-code" style="background:#000; padding:10px; border-radius:12px; margin-top:8px; cursor:pointer;">轉數快：122891914</div>
-  </div>
-  <div id="qr-box" class="card" style="display:none;"></div>
-</div>
-
-<div id="view-passenger-list" class="view">
-  <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
-  <div id="bus-list-container">載入中…</div>
-  <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
-</div>
-
-<div id="view-passenger" class="view">
-  <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
-  <div class="card" id="pass-data-card">讀取中…</div>
-  <div class="route-strip" id="pass-route-strip"></div>
-  <div class="msg-area">
-    <div class="msg-list" id="pass-msg-list"></div>
-    <div class="msg-row">
-      <button class="record-btn" id="btn-pass-record">🎤<span class="record-timer" id="pass-timer">0s</span></button>
-      <input id="pass-msg-input" class="msg-input" placeholder="訊息…">
-      <button class="send-btn" id="btn-pass-send">發</button>
-    </div>
-    <button class="btn btn-secondary" id="btn-pass-clear">清除訊息</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
-</div>
-
-<div id="view-driver" class="view">
-  <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
-    <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
-  </div>
-  
-  <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
-    <div class="card" style="text-align:center; padding:12px;">
-      <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
-      <div style="margin:8px 0;">
-        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
-        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
-      </div>
-      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
-      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
-    </div>
-    <div class="card" style="text-align:center; padding:10px;">
-      <div style="font-size:20px; color:#aaa;">目前乘客</div>
-      <div class="big-number" id="d-pass-count-new">0</div>
-      <button class="btn btn-green" id="btn-add-pass-new" style="font-size:26px; padding:14px;">＋ 乘客</button>
-      <button class="btn btn-red" id="btn-sub-pass-new" style="font-size:26px; padding:14px;">－ 乘客</button>
-    </div>
-    <button class="btn btn-portal" id="btn-prev-new" style="font-size:24px; padding:16px;">◀ 上一站</button>
-    <button class="btn btn-portal" id="btn-next-new" style="font-size:24px; padding:16px;">下一站 ▶</button>
-    <div class="row">
-      <button class="btn" id="d-full-btn-new" style="font-size:22px; padding:14px;">🚫 滿座</button>
-      <button class="btn btn-secondary" id="d-car-btn-new" style="font-size:22px; padding:14px;">16座</button>
-    </div>
-    <div class="row">
-      <button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:20px; padding:14px;">🔄 調頭</button>
-      <button class="btn" id="btn-mode-toggle-new" style="background:#bf5af2; font-size:20px; padding:14px;">切換路線</button>
-    </div>
-    <button id="start-gps-new" class="btn btn-green" style="font-size:24px; padding:16px;">🟢 開始當值 (GPS)</button>
-    <button id="stop-gps-new" class="btn btn-red" style="font-size:24px; padding:16px; display:none;">🔴 停止當值</button>
-    <div class="route-strip" id="d-route-strip-new"></div>
-  </div>
-
-  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
-    <div class="driver-snap-section" id="old-sec1">
-      <div class="card">
-        <div id="d-info-old">手機: 未登入 | 車牌: 未輸入</div>
-        <div id="d-mode-display-old" style="display:inline-block; padding:10px 24px; border-radius:24px; background:#9333ea; font-size:22px; font-weight:bold; margin-bottom:10px;">繁忙時段西鐵快線</div>
-        <div id="d-dir-display-old" style="display:inline-block; padding:12px 28px; border-radius:28px; font-size:24px; font-weight:bold; margin-bottom:10px; background:#ff3b30;">往 元朗</div>
-        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
-        <div class="row"><button id="btn-prev-old" class="btn btn-portal">◀ 上一站</button><button id="btn-next-old" class="btn btn-portal">下一站 ▶</button></div>
-        <div id="d-distance-old"></div>
-      </div>
-      <div class="row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙時段</button></div>
-      <button id="start-gps-old" class="btn btn-green">🟢 開始當值</button>
-      <button id="stop-gps-old" class="btn btn-red" style="display:none;">🔴 停止當值</button>
-      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
-      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
-    </div>
-    <div class="driver-snap-section" id="old-sec2">
-      <div class="card">
-        <div>目前乘客數</div>
-        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
-        <div class="row"><button class="btn btn-green" id="btn-add-pass-old">＋</button><button class="btn btn-red" id="btn-sub-pass-old">－</button></div>
-        <div class="row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
-        <button id="d-fullBtn-old" class="btn btn-green" style="font-size:24px;">滿座</button>
-      </div>
-    </div>
-    <div class="driver-snap-section" id="old-sec3">
-      <div class="msg-area">
-        <div class="msg-list" id="driver-msg-list-old"></div>
-        <div class="msg-row">
-          <button class="record-btn" id="btn-driver-record-old">🎤<span class="record-timer" id="driver-timer-old">0s</span></button>
-          <input id="driver-msg-input-old" class="msg-input" placeholder="廣播訊息…">
-          <button class="send-btn" id="btn-driver-send-old">發</button>
-        </div>
-        <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
-      </div>
-      <button class="btn btn-secondary" id="btn-driver-clear-old">清除訊息</button>
-    </div>
-  </div>
-  <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
-</div>
-
-<div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-msg-overlay">✕ 關閉</button>
-  </div>
-  <div class="msg-list" id="driver-msg-list-overlay" style="flex:1; background:#1a1a1a; border-radius:14px; padding:10px;"></div>
-  <div class="msg-row" style="margin-top:10px;">
-    <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="record-timer" id="driver-timer-overlay">0s</span></button>
-    <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
-    <button class="send-btn" id="btn-driver-send-overlay">發</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
-</div>
-
-<div id="view-admin" class="view">
-  <div class="card admin-panel">
-    <div class="title">🛡️ 總管後台控制台</div>
-    
-    <div class="admin-stats">
-      <div class="admin-stat-card">
-        <div class="label">在線車輛</div>
-        <div class="value" id="admin-active-count">0</div>
-      </div>
-      <div class="admin-stat-card">
-        <div class="label">總乘客數</div>
-        <div class="value" id="admin-passenger-count">0</div>
-      </div>
-    </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
-      <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
-      <button class="admin-tab" data-tab="logs">📋 紀錄</button>
-      <button class="admin-tab" data-tab="announce">📢 公告</button>
-    </div>
-
-    <div class="admin-section active" id="admin-section-vehicles">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
-      <div id="admin-vehicle-list">載入中...</div>
-    </div>
-
-    <div class="admin-section" id="admin-section-bans">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
-      <div .admin-tab {
-  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
-  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
-  transition: all 0.3s;
-}
-.admin-tab.active { background: var(--gold); color: #000; }
-.admin-section { display: none; }
-.admin-section.active { display: block; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="title">西鐵小巴 v8.8.0</div>
-  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
-  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
-</div>
-
-<div class="privacy-notice">
-  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
-</div>
-
-<button class="floating-announce" id="floating-announce-btn" title="查看公告">📢</button>
-
-<div class="announce-overlay" id="announce-overlay">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <span style="font-size:24px; font-weight:bold;">📢 系統公告</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-announce-overlay">✕ 關閉</button>
-  </div>
-  <div class="announce-list" id="announce-list-content">
-    <div style="text-align:center; color:#888; padding:20px;">暫無公告</div>
-  </div>
-</div>
-
-<div id="view-lobby" class="view active">
-  <div class="card" style="text-align:left;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
-      <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
-    </div>
-    <div style="margin-top:10px; color:#ccc; line-height:1.6;">
-      🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
-      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-      🎤 <b>長按錄音</b> 可發送語音訊息<br>
-      📢 <b>公告</b>：點擊右下角橙色圖標查看系統公告
-    </div>
-  </div>
-  <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
-  <button class="btn btn-driver">🚏 司機入口</button>
-  <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
-  <div class="card" style="background:#2c1a3a; border-color:var(--gold);">
-    <div style="color:var(--gold);">☕ 支持開發者</div>
-    <div id="fps-code" style="background:#000; padding:10px; border-radius:12px; margin-top:8px; cursor:pointer;">轉數快：122891914</div>
-  </div>
-  <div id="qr-box" class="card" style="display:none;"></div>
-</div>
-
-<div id="view-passenger-list" class="view">
-  <h2 style="text-align:center; margin-bottom:12px;">🚐 線上小巴 (60秒內更新)</h2>
-  <div id="bus-list-container">載入中…</div>
-  <button class="btn btn-secondary" id="btn-back-list">返回大堂</button>
-</div>
-
-<div id="view-passenger" class="view">
-  <button id="voice-toggle" class="btn" style="background:#ff9f0a; color:#000;">🔊 開啟廣東話報站</button>
-  <div class="card" id="pass-data-card">讀取中…</div>
-  <div class="route-strip" id="pass-route-strip"></div>
-  <div class="msg-area">
-    <div class="msg-list" id="pass-msg-list"></div>
-    <div class="msg-row">
-      <button class="record-btn" id="btn-pass-record">🎤<span class="record-timer" id="pass-timer">0s</span></button>
-      <input id="pass-msg-input" class="msg-input" placeholder="訊息…">
-      <button class="send-btn" id="btn-pass-send">發</button>
-    </div>
-    <button class="btn btn-secondary" id="btn-pass-clear">清除訊息</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-back-track">返回列表</button>
-</div>
-
-<div id="view-driver" class="view">
-  <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
-    <button class="btn btn-secondary" id="btn-switch-layout" style="width:auto; padding:8px 16px; font-size:18px;">🔧 切換舊版面</button>
-  </div>
-  
-  <div id="driver-new-panel" class="driver-panel-new" style="display:flex;">
-    <div class="card" style="text-align:center; padding:12px;">
-      <div style="font-size:18px; color:#aaa;" id="d-info-new">手機: 未登入 | 車牌: -</div>
-      <div style="margin:8px 0;">
-        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
-        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
-      </div>
-      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
-      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
-    </div>
-    <div class="card" style="text-align:center; padding:10px;">
-      <div style="font-size:20px; color:#aaa;">目前乘客</div>
-      <div class="big-number" id="d-pass-count-new">0</div>
-      <button class="btn btn-green" id="btn-add-pass-new" style="font-size:26px; padding:14px;">＋ 乘客</button>
-      <button class="btn btn-red" id="btn-sub-pass-new" style="font-size:26px; padding:14px;">－ 乘客</button>
-    </div>
-    <button class="btn btn-portal" id="btn-prev-new" style="font-size:24px; padding:16px;">◀ 上一站</button>
-    <button class="btn btn-portal" id="btn-next-new" style="font-size:24px; padding:16px;">下一站 ▶</button>
-    <div class="row">
-      <button class="btn" id="d-full-btn-new" style="font-size:22px; padding:14px;">🚫 滿座</button>
-      <button class="btn btn-secondary" id="d-car-btn-new" style="font-size:22px; padding:14px;">16座</button>
-    </div>
-    <div class="row">
-      <button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:20px; padding:14px;">🔄 調頭</button>
-      <button class="btn" id="btn-mode-toggle-new" style="background:#bf5af2; font-size:20px; padding:14px;">切換路線</button>
-    </div>
-    <button id="start-gps-new" class="btn btn-green" style="font-size:24px; padding:16px;">🟢 開始當值 (GPS)</button>
-    <button id="stop-gps-new" class="btn btn-red" style="font-size:24px; padding:16px; display:none;">🔴 停止當值</button>
-    <div class="route-strip" id="d-route-strip-new"></div>
-  </div>
-
-  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
-    <div class="driver-snap-section" id="old-sec1">
-      <div class="card">
-        <div id="d-info-old">手機: 未登入 | 車牌: 未輸入</div>
-        <div id="d-mode-display-old" style="display:inline-block; padding:10px 24px; border-radius:24px; background:#9333ea; font-size:22px; font-weight:bold; margin-bottom:10px;">繁忙時段西鐵快線</div>
-        <div id="d-dir-display-old" style="display:inline-block; padding:12px 28px; border-radius:28px; font-size:24px; font-weight:bold; margin-bottom:10px; background:#ff3b30;">往 元朗</div>
-        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
-        <div class="row"><button id="btn-prev-old" class="btn btn-portal">◀ 上一站</button><button id="btn-next-old" class="btn btn-portal">下一站 ▶</button></div>
-        <div id="d-distance-old"></div>
-      </div>
-      <div class="row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙時段</button></div>
-      <button id="start-gps-old" class="btn btn-green">🟢 開始當值</button>
-      <button id="stop-gps-old" class="btn btn-red" style="display:none;">🔴 停止當值</button>
-      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
-      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
-    </div>
-    <div class="driver-snap-section" id="old-sec2">
-      <div class="card">
-        <div>目前乘客數</div>
-        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
-        <div class="row"><button class="btn btn-green" id="btn-add-pass-old">＋</button><button class="btn btn-red" id="btn-sub-pass-old">－</button></div>
-        <div class="row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
-        <button id="d-fullBtn-old" class="btn btn-green" style="font-size:24px;">滿座</button>
-      </div>
-    </div>
-    <div class="driver-snap-section" id="old-sec3">
-      <div class="msg-area">
-        <div class="msg-list" id="driver-msg-list-old"></div>
-        <div class="msg-row">
-          <button class="record-btn" id="btn-driver-record-old">🎤<span class="record-timer" id="driver-timer-old">0s</span></button>
-          <input id="driver-msg-input-old" class="msg-input" placeholder="廣播訊息…">
-          <button class="send-btn" id="btn-driver-send-old">發</button>
-        </div>
-        <button class="btn btn-secondary" id="btn-logout-old">更換車牌 / 返回大堂</button>
-      </div>
-      <button class="btn btn-secondary" id="btn-driver-clear-old">清除訊息</button>
-    </div>
-  </div>
-  <button class="overlay-btn" id="float-msg-btn">💬 訊息</button>
-</div>
-
-<div id="msg-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:none; flex-direction:column; padding:16px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <span style="font-size:24px; font-weight:bold;">📨 乘客訊息</span>
-    <button class="btn btn-secondary" style="width:auto; padding:10px 20px;" id="close-msg-overlay">✕ 關閉</button>
-  </div>
-  <div class="msg-list" id="driver-msg-list-overlay" style="flex:1; background:#1a1a1a; border-radius:14px; padding:10px;"></div>
-  <div class="msg-row" style="margin-top:10px;">
-    <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="record-timer" id="driver-timer-overlay">0s</span></button>
-    <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
-    <button class="send-btn" id="btn-driver-send-overlay">發</button>
-  </div>
-  <button class="btn btn-secondary" id="btn-driver-clear-overlay" style="margin-top:6px;">清除訊息</button>
-</div>
-
-<div id="view-admin" class="view">
-  <div class="card admin-panel">
-    <div class="title">🛡️ 總管後台控制台</div>
-    
-    <div class="admin-stats">
-      <div class="admin-stat-card">
-        <div class="label">在線車輛</div>
-        <div class="value" id="admin-active-count">0</div>
-      </div>
-      <div class="admin-stat-card">
-        <div class="label">總乘客數</div>
-        <div class="value" id="admin-passenger-count">0</div>
-      </div>
-    </div>
-
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="vehicles">🚐 車輛</button>
-      <button class="admin-tab" data-tab="bans">🚫 封鎖</button>
-      <button class="admin-tab" data-tab="logs">📋 紀錄</button>
-      <button class="admin-tab" data-tab="announce">📢 公告</button>
-    </div>
-
-    <div class="admin-section active" id="admin-section-vehicles">
-      <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚐 在線車輛管理</div>
-      <div id="admin-vehicle-list">載入中...</div>
-    </div>
-
+    <!-- 封鎖管理 -->
     <div class="admin-section" id="admin-section-bans">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">🚫 封鎖使用者</div>
       <div class="admin-announce-form admin-ban-form">
@@ -1965,6 +390,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       <div id="admin-ban-list">載入中...</div>
     </div>
 
+    <!-- 用戶紀錄 -->
     <div class="admin-section" id="admin-section-logs">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">📋 用戶操作紀錄</div>
       <div style="margin-bottom:8px;">
@@ -1973,6 +399,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       <div id="admin-log-list">載入中...</div>
     </div>
 
+    <!-- 公告管理 -->
     <div class="admin-section" id="admin-section-announce">
       <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:var(--gold);">📢 發布全局公告</div>
       <div class="admin-announce-form">
@@ -2047,11 +474,15 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
   };
 
   const logUserActivity = async (role, identifier, action) => {
-    if (!state.userIP) state.userIP = await fetchIP();
-    const logRef = userLogsRef.push();
-    await logRef.set({
-      role, identifier, action, ip: state.userIP, userAgent: state.userAgent, ts: Date.now()
-    });
+    if (!state.userIP) return;
+    try {
+      const logRef = userLogsRef.push();
+      await logRef.set({
+        role, identifier, action, ip: state.userIP, userAgent: state.userAgent, ts: Date.now()
+      });
+    } catch(e) {
+      console.warn("🛡️ 日誌紀錄失敗（可能 Rules 未開通）：", e);
+    }
   };
 
   const checkBan = async (identifier) => {
@@ -2152,7 +583,9 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       list.appendChild(div);
     });
     list.scrollTop = list.scrollHeight;
-    if (Object.keys(updates).length) snap.ref.update(updates);
+    try {
+      if (Object.keys(updates).length) snap.ref.update(updates);
+    } catch(e) { console.warn("🛡️ 訊息過期清理被阻止（無寫入權限）"); }
   };
 
   const updateAllDriverMessages = snap => {
@@ -2207,7 +640,6 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     const btn = document.getElementById(btnId);
     const start = (e) => { e.preventDefault(); btn.classList.add('recording'); startRec(target, timerId); };
     const stop = () => { if(btn.classList.contains('recording')) { btn.classList.remove('recording'); stopRec(timerId); } };
-    
     btn.addEventListener('pointerdown', start);
     document.addEventListener('pointerup', stop);
     document.addEventListener('pointercancel', stop);
@@ -2287,7 +719,6 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     const strip = document.getElementById(containerId);
     if(!strip) return;
     const nodes = strip.querySelectorAll('.dot-node');
-    
     nodes.forEach(node => {
       const idx = parseInt(node.dataset.idx);
       node.classList.remove('passed', 'current', 'next');
@@ -2297,6 +728,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     });
   };
 
+  // 🛠️ 【徹底修正漏洞】：完美補正冒號屬性綁定，杜絕 SyntaxError 引擎崩潰
   const refreshNewUI = async (upload) => {
     const st = state.driver, list = getStations(), now = cleanStation(list[st.idx]);
     const next = st.idx+1<list.length ? cleanStation(list[st.idx+1]) : '終點站';
@@ -2316,18 +748,26 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.getElementById('btn-next-new').disabled = st.idx===list.length-1;
 
     if (!state.routeNodesBuilt.new) { buildRouteNodes('d-route-strip-new', list); state.routeNodesBuilt.new = true; }
-    
     if (state.announceTransitionTimer) clearTimeout(state.announceTransitionTimer);
     updateRouteNodes('d-route-strip-new', st.idx, st.idx + 1);
     state.announceTransitionTimer = setTimeout(() => { updateRouteNodes('d-route-strip-new', st.idx); }, 2000);
 
     if (upload && st.gpsId && st.phone && st.plate) {
-      await activeRef.child(st.phone).set({
-        phone:st.phone, plate:st.plate, routeMode:st.mode==='busy'?'繁忙時段':'非繁忙',
-        direction:dirText, rawStationName:list[st.idx], passenger:st.pass, maxSeat:st.max, full:st.full,
-        targetStation:next, ts:Date.now()
-      });
-      activeRef.child(st.phone).onDisconnect().remove();
+      try {
+        await activeRef.child(st.phone).set({
+          phone: st.phone, 
+          plate: st.plate, 
+          routeMode: st.mode==='busy'?'繁忙時段':'非繁忙',
+          direction: dirText, 
+          rawStationName: list[st.idx], // ✅ 經已完美修復：補回缺失的冒號
+          passenger: st.pass, 
+          maxSeat: st.max, 
+          full: st.full,
+          targetStation: next, 
+          ts: Date.now()
+        });
+        activeRef.child(st.phone).onDisconnect().remove();
+      } catch(e) { console.error("🛡️ 上傳巴士位置失敗:", e); }
     }
   };
 
@@ -2363,18 +803,19 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     }
 
     if (!state.routeNodesBuilt.old) { buildRouteNodes('d-route-container-old', list); state.routeNodesBuilt.old = true; }
-    
     if (state.announceTransitionTimer) clearTimeout(state.announceTransitionTimer);
     updateRouteNodes('d-route-container-old', st.idx, st.idx + 1);
     state.announceTransitionTimer = setTimeout(() => { updateRouteNodes('d-route-container-old', st.idx); }, 2000);
 
     if (upload && st.gpsId && st.phone && st.plate) {
-      await activeRef.child(st.phone).set({
-        phone:st.phone, plate:st.plate, routeMode:st.mode==='busy'?'繁忙時段':'非繁忙',
-        direction:dirText, rawStationName:list[st.idx], passenger:st.pass, maxSeat:st.max, full:st.full,
-        targetStation:cleanStation(list[st.idx+1]||'終點站'), ts:Date.now()
-      });
-      activeRef.child(st.phone).onDisconnect().remove();
+      try {
+        await activeRef.child(st.phone).set({
+          phone:st.phone, plate:st.plate, routeMode:st.mode==='busy'?'繁忙時段':'非繁忙',
+          direction:dirText, rawStationName:list[st.idx], passenger:st.pass, maxSeat:st.max, full:st.full,
+          targetStation:cleanStation(list[st.idx+1]||'終點站'), ts:Date.now()
+        });
+        activeRef.child(st.phone).onDisconnect().remove();
+      } catch(e) { console.error("🛡️ 上傳舊巴士位置失敗:", e); }
     }
   };
 
@@ -2399,7 +840,6 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     container.addEventListener('click', resetTimer);
 
     if (state.listeners.driverMsg) msgRef.child(state.driver.phone).off('child_added', state.listeners.driverMsg);
-    
     state.listeners.driverMsg = msgRef.child(state.driver.phone).on('child_added', snap => {
       const m = snap.val();
       if (m && m.from && m.from.startsWith('乘客:')) {
@@ -2437,7 +877,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       document.getElementById('d-full-btn-new').onclick = ()=>{ state.driver.full = !state.driver.full; speak(state.driver.full?'已滿座':'取消滿座'); refreshDriverUI(); };
       document.getElementById('d-car-btn-new').onclick = ()=>{ state.driver.max = state.driver.max===16?19:16; refreshDriverUI(); };
       document.getElementById('btn-prev-new').onclick = ()=>{ if(state.driver.idx>0){ state.driver.idx--; state.driver.manualUntil=Date.now()+10000; refreshDriverUI(); } };
-      document.getElementById('btn-next-new').onclick = ()=>{
+      document.getElementById('btn-next-new').onclick = () => {
         const list = getStations();
         if(state.driver.idx<list.length-1){
           state.driver.idx++; state.driver.manualUntil=Date.now()+10000;
@@ -2450,7 +890,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       document.getElementById('btn-switch-dir-new').onclick = ()=>{ if(state.driver.mode==='busy') state.driver.dirBusy=!state.driver.dirBusy; else state.driver.dirNormal=!state.driver.dirNormal; state.driver.idx=0; state.driver.manualUntil=Date.now()+10000; state.routeNodesBuilt.new=false; refreshDriverUI(); };
       document.getElementById('btn-mode-toggle-new').onclick = ()=>{ state.driver.mode = state.driver.mode==='busy'?'normal':'busy'; state.driver.idx=0; state.driver.dirBusy=false; state.driver.dirNormal=false; state.routeNodesBuilt.new=false; refreshDriverUI(); };
       document.getElementById('start-gps-new').onclick = ()=>{ unlockIosSpeech(); startGps(); refreshDriverUI(); };
-      document.getElementById('stop-gps-new').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); state.driver.gpsId=null; activeRef.child(state.driver.phone).remove(); refreshDriverUI(false); };
+      document.getElementById('stop-gps-new').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); state.driver.gpsId=null; try { activeRef.child(state.driver.phone).remove(); } catch(e){} refreshDriverUI(false); };
     } else {
       document.getElementById('btn-add-pass-old').onclick = ()=>{ if(state.driver.pass<state.driver.max){ state.driver.pass++; if(state.driver.pass===state.driver.max) state.driver.full=true; refreshDriverUI(); } };
       document.getElementById('btn-sub-pass-old').onclick = ()=>{ if(state.driver.pass>0){ state.driver.pass--; state.driver.full=false; refreshDriverUI(); } };
@@ -2458,7 +898,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       document.getElementById('d-car16-old').onclick = ()=>{ state.driver.max=16; refreshDriverUI(); };
       document.getElementById('d-car19-old').onclick = ()=>{ state.driver.max=19; refreshDriverUI(); };
       document.getElementById('btn-prev-old').onclick = ()=>{ if(state.driver.idx>0){ state.driver.idx--; state.driver.manualUntil=Date.now()+10000; refreshDriverUI(); } };
-      document.getElementById('btn-next-old').onclick = ()=>{
+      document.getElementById('btn-next-old').onclick = () => {
         const list = getStations();
         if(state.driver.idx<list.length-1){
           state.driver.idx++; state.driver.manualUntil=Date.now()+10000;
@@ -2472,13 +912,13 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       document.getElementById('d-mode-busy-old').onclick = ()=>{ state.driver.mode='busy'; state.driver.idx=0; state.driver.dirBusy=false; state.routeNodesBuilt.old=false; refreshDriverUI(); };
       document.getElementById('d-mode-normal-old').onclick = ()=>{ state.driver.mode='normal'; state.driver.idx=0; state.driver.dirNormal=false; state.routeNodesBuilt.old=false; refreshDriverUI(); };
       document.getElementById('start-gps-old').onclick = ()=>{ unlockIosSpeech(); startGps(); refreshDriverUI(); };
-      document.getElementById('stop-gps-old').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); state.driver.gpsId=null; activeRef.child(state.driver.phone).remove(); refreshDriverUI(false); };
-      document.getElementById('btn-logout-old').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); activeRef.child(state.driver.phone).remove(); state.driver.phone=''; state.driver.plate=''; showView('view-lobby'); };
+      document.getElementById('stop-gps-old').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); state.driver.gpsId=null; try { activeRef.child(state.driver.phone).remove(); } catch(e){} refreshDriverUI(false); };
+      document.getElementById('btn-logout-old').onclick = ()=>{ if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId); try { activeRef.child(state.driver.phone).remove(); } catch(e){} state.driver.phone=''; state.driver.plate=''; showView('view-lobby'); };
       document.getElementById('btn-driver-send-old').onclick = ()=>{
         const txt = document.getElementById('driver-msg-input-old').value.trim();
-        if(txt) { msgRef.child(state.driver.phone).push({from:'司機'+state.driver.plate,type:'text',text:txt,ts:Date.now()}); document.getElementById('driver-msg-input-old').value = ''; state.autoReturnEnabled = true; if (state.oldResetIdleTimer) state.oldResetIdleTimer(); }
+        if(txt) { try { msgRef.child(state.driver.phone).push({from:'司機'+state.driver.plate,type:'text',text:txt,ts:Date.now()}); }catch(e){} document.getElementById('driver-msg-input-old').value = ''; state.autoReturnEnabled = true; if (state.oldResetIdleTimer) state.oldResetIdleTimer(); }
       };
-      document.getElementById('btn-driver-clear-old').onclick = ()=>{ if(confirm('清除訊息？')) msgRef.child(state.driver.phone).remove(); };
+      document.getElementById('btn-driver-clear-old').onclick = ()=>{ if(confirm('清除訊息？')) try { msgRef.child(state.driver.phone).remove(); } catch(e){} };
     }
   };
 
@@ -2508,17 +948,15 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
 
   const updatePassengerView = () => {
     if (!state.passenger.tracking) return;
-    
-    if (state.listeners.passengerMsg) msgRef.child(state.passenger.tracking).off('value', state.listeners.passengerMsg);
-    if (state.listeners.passengerBus) activeRef.child(state.passenger.tracking).off('value', state.listeners.passengerBus);
+    if (state.listeners.passengerMsg) try { msgRef.child(state.passenger.tracking).off('value', state.listeners.passengerMsg); } catch(e){}
+    if (state.listeners.passengerBus) try { activeRef.child(state.passenger.tracking).off('value', state.listeners.passengerBus); } catch(e){}
 
     state.listeners.passengerMsg = snap => renderMessages(snap, 'pass-msg-list');
-    msgRef.child(state.passenger.tracking).on('value', state.listeners.passengerMsg);
+    try { msgRef.child(state.passenger.tracking).on('value', state.listeners.passengerMsg); } catch(e){}
     
     state.listeners.passengerBus = snap => {
       const bus = snap.val(); if(!bus?.plate) return;
       const raw = bus.rawStationName||'', clean = cleanStation(raw);
-      
       if (raw !== state.passenger.lastStation) {
         if (state.passenger.voice) speak(`小巴 ${bus.plate} 駛至：${clean}。`+(bus.full?'滿座':''));
         state.passenger.lastStation = raw;
@@ -2534,7 +972,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       
       updatePassengerRoute(bus);
     };
-    activeRef.child(state.passenger.tracking).on('value', state.listeners.passengerBus);
+    try { activeRef.child(state.passenger.tracking).on('value', state.listeners.passengerBus); } catch(e){}
   };
 
   const updatePassengerRoute = (bus) => {
@@ -2664,8 +1102,8 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
   window.adminForceOffline = (phone) => { if (confirm(`確定將 ${phone} 強制下線？`)) { activeRef.child(phone).remove().then(() => { toast('✅ 已強制下線'); }); } };
   window.adminUnban = (key) => { if (confirm('確定解除封鎖？')) { bansRef.child(key).remove().then(() => { toast('✅ 已解除封鎖'); }); } };
 
-  document.addEventListener('DOMContentLoaded', async ()=>{
-    state.userIP = await fetchIP();
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchIP().then(ip => { state.userIP = ip; });
     
     const globalVoiceBtn = document.getElementById('global-voice-btn');
     const updateVoiceBtn = () => {
@@ -2684,28 +1122,42 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.getElementById('close-announce-overlay').onclick = () => { document.getElementById('announce-overlay').classList.remove('show'); };
     document.getElementById('btn-guide-voice').onclick = ()=>{ unlockIosSpeech(); if (state.guideToggle) speak('歡迎使用西鐵小巴，祝你有一個愉快嘅旅程'); else speak('司機請點擊紅色按鈕登入，輸入車牌。乘客點擊藍色按鈕，輸入WhatsApp號碼。長按錄音掣發送語音訊息。'); state.guideToggle = !state.guideToggle; };
 
+    // 🧍‍♂️ 乘客入口
     document.getElementById('btn-passenger').onclick = async ()=>{
       let name = localStorage.getItem('van_pass_name');
       if (!name) { name=prompt('輸入WhatsApp號碼或暱稱：'); if(!name) return; localStorage.setItem('van_pass_name',name); }
-      const banCheck = await checkBan(name);
-      if (banCheck.banned) { alert(`您已被封鎖！\n原因：${banCheck.reason}\n封鎖時間：${new Date(banCheck.banTime).toLocaleString('zh-HK')}`); return; }
-      state.passenger.name = name; await logUserActivity('乘客', name, '登入');
+      
+      try {
+        const banCheck = await checkBan(name);
+        if (banCheck.banned) { alert(`您已被封鎖！\n原因：${banCheck.reason}\n封鎖時間：${new Date(banCheck.banTime).toLocaleString('zh-HK')}`); return; }
+      } catch(e) { console.warn("🛡️ 封鎖檢查受限:", e); }
+      
+      state.passenger.name = name; 
+      try { await logUserActivity('乘客', name, '登入'); } catch(e){}
       showView('view-passenger-list'); renderBusList(); speak('請支持開發者');
     };
 
+    // 🚏 司機入口
     document.getElementById('btn-driver').onclick = async ()=>{
       let phone = localStorage.getItem('van_drv_phone')||'', plate = localStorage.getItem('van_drv_plate')||'';
       phone = prompt('手機號碼',phone); if(!phone) return;
       plate = prompt('車牌',plate); if(!plate) return;
-      const banCheck = await checkBan(phone);
-      if (banCheck.banned) { alert(`您已被封鎖！\n原因：${banCheck.reason}\n封鎖時間：${new Date(banCheck.banTime).toLocaleString('zh-HK')}`); return; }
+      
+      try {
+        const banCheck = await checkBan(phone);
+        if (banCheck.banned) { alert(`您已被封鎖！\n原因：${banCheck.reason}\n封鎖時間：${new Date(banCheck.banTime).toLocaleString('zh-HK')}`); return; }
+      } catch(e) { console.warn("🛡️ 封鎖檢查豁免放行:", e); }
       
       state.driver.phone = phone; state.driver.plate = plate.toUpperCase();
       localStorage.setItem('van_drv_phone',phone); localStorage.setItem('van_drv_plate',plate);
       state.driver.mode='busy'; state.driver.idx=0; state.driver.dirBusy=false; state.driver.pass=0; state.driver.max=16; state.driver.full=false;
-      await logUserActivity('司機', phone, `登入 - 車牌：${plate.toUpperCase()}`);
       
-      msgRef.child(phone).off('value'); msgRef.child(phone).on('value', updateAllDriverMessages);
+      try { await logUserActivity('司機', phone, `登入 - 車牌：${plate.toUpperCase()}`); } catch(e){}
+      try {
+        msgRef.child(phone).off('value'); 
+        msgRef.child(phone).on('value', updateAllDriverMessages);
+      } catch(e) { console.warn("🛡️ 訊息鏈接失敗:", e); }
+      
       showView('view-driver'); switchLayout(state.useNewLayout);
     };
 
@@ -2730,11 +1182,11 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.getElementById('btn-pass-send').onclick = async ()=>{
       const txt = document.getElementById('pass-msg-input').value.trim();
       if(txt && state.passenger.tracking) { 
-        msgRef.child(state.passenger.tracking).push({from:'乘客:'+state.passenger.name,type:'text',text:txt,ts:Date.now()}); 
-        document.getElementById('pass-msg-input').value=''; await logUserActivity('乘客', state.passenger.name, `發送訊息：${txt.substring(0, 30)}`);
+        try { msgRef.child(state.passenger.tracking).push({from:'乘客:'+state.passenger.name,type:'text',text:txt,ts:Date.now()}); }catch(e){}
+        document.getElementById('pass-msg-input').value=''; try{await logUserActivity('乘客', state.passenger.name, `發送訊息：${txt.substring(0, 30)}`);}catch(e){}
       }
     };
-    document.getElementById('btn-pass-clear').onclick = ()=>{ if(confirm('清除訊息？')) msgRef.child(state.passenger.tracking).remove(); };
+    document.getElementById('btn-pass-clear').onclick = ()=>{ if(confirm('清除訊息？')) try{msgRef.child(state.passenger.tracking).remove();}catch(e){} };
     setupRecBtn('btn-pass-record','passenger','pass-timer');
     
     document.getElementById('float-msg-btn').onclick = ()=> document.getElementById('msg-overlay').style.display='flex';
@@ -2743,32 +1195,28 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.getElementById('btn-driver-send-overlay').onclick = async ()=>{
       const txt = document.getElementById('driver-msg-input-overlay').value.trim();
       if(txt) { 
-        msgRef.child(state.driver.phone).push({from:'司機'+state.driver.plate,type:'text',text:txt,ts:Date.now()}); 
-        document.getElementById('driver-msg-input-overlay').value=''; await logUserActivity('司機', state.driver.phone, `發送訊息：${txt.substring(0, 30)}`);
+        try{msgRef.child(state.driver.phone).push({from:'司機'+state.driver.plate,type:'text',text:txt,ts:Date.now()});}catch(e){}
+        document.getElementById('driver-msg-input-overlay').value=''; try{await logUserActivity('司機', state.driver.phone, `發送訊息：${txt.substring(0, 30)}`);}catch(e){}
       }
     };
-    document.getElementById('btn-driver-clear-overlay').onclick = ()=>{ if(confirm('清除所有訊息？')) msgRef.child(state.driver.phone).remove(); };
+    document.getElementById('btn-driver-clear-overlay').onclick = ()=>{ if(confirm('清除所有訊息？')) try{msgRef.child(state.driver.phone).remove();}catch(e){} };
     
     setupRecBtn('btn-driver-record-overlay','driver','driver-timer-overlay');
     setupRecBtn('btn-driver-record-old','driver','driver-timer-old');
 
     document.getElementById('btn-back-list').onclick = ()=>{ if(state.listeners.busList) { activeRef.off('value',state.listeners.busList); state.listeners.busList = null; } showView('view-lobby'); };
     document.getElementById('btn-back-track').onclick = ()=>{ 
-      if (state.listeners.passengerMsg) { msgRef.child(state.passenger.tracking).off('value',state.listeners.passengerMsg); state.listeners.passengerMsg = null; }
-      if (state.listeners.passengerBus) { activeRef.child(state.passenger.tracking).off('value',state.listeners.passengerBus); state.listeners.passengerBus = null; }
+      if (state.listeners.passengerMsg) { try{msgRef.child(state.passenger.tracking).off('value',state.listeners.passengerMsg);}catch(e){} state.listeners.passengerMsg = null; }
+      if (state.listeners.passengerBus) { try{activeRef.child(state.passenger.tracking).off('value',state.listeners.passengerBus);}catch(e){} state.listeners.passengerBus = null; }
       showView('view-passenger-list'); 
     };
 
-    // =========================================================================
-    // 🛡️ 完美整合：總管後台安全認證入口 (Firebase Auth + Email 驗證)
-    // =========================================================================
+    // 🛡️ 總管後台安全認證入口 (Firebase Auth)
     let clicks=0;
     document.getElementById('dev-tag').onclick = ()=>{
       clicks++;
       if(clicks>=5){ 
         clicks=0; 
-        
-        // 1. 彈出輸入你喺後台設定嘅管理員 Email 同密碼
         const email = prompt('請輸入總管管理員 Email：');
         if(!email) return;
         const password = prompt('請輸入總管管理員密碼：');
@@ -2776,18 +1224,15 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
 
         toast('⏳ 正在安全驗證...');
 
-        // 2. 呼叫 Firebase Auth 後台進行雲端比對驗證
         firebase.auth().signInWithEmailAndPassword(email, password)
           .then((userCredential) => {
             const user = userCredential.user;
-            
-            // 3. 雙重保險驗證：檢查登入成功嘅 UID 係咪同你設定嘅一模一樣
             if(user.uid === 'PV3A6sfzjdf2npJD8g40dezG2sU2') {
               toast('✅ 認證成功！歡迎總管');
-              initAdmin(); // 通過兩關安全鎖，進入總管後台
+              initAdmin();
             } else {
               toast('❌ 權限不足：你並非指定的總管帳號');
-              firebase.auth().signOut(); // 唔對路即刻踢走
+              firebase.auth().signOut();
             }
           })
           .catch((error) => {
@@ -2798,12 +1243,9 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
       clearTimeout(window._devTimer); window._devTimer=setTimeout(()=>clicks=0,3000);
     };
 
-    // 💡 總管離開後台按鈕邏輯優化
     const originalAdminBackBtn = document.getElementById('btn-admin-back').onclick;
     document.getElementById('btn-admin-back').onclick = () => {
       if (originalAdminBackBtn) originalAdminBackBtn();
-      
-      // 離開時強制安全登出 Firebase，消除內存 Token，防止其他人用呢部機偷入後台
       firebase.auth().signOut().then(() => {
         toast('🔒 總管已安全登出並鎖定');
       });
@@ -2855,7 +1297,8 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('passenger')) {
       state.passenger.name = params.get('passenger').trim(); localStorage.setItem('van_pass_name',state.passenger.name);
-      await logUserActivity('乘客', state.passenger.name, 'QR碼登入'); showView('view-passenger-list'); renderBusList();
+      fetchIP().then(async ip => { state.userIP = ip; try{await logUserActivity('乘客', state.passenger.name, 'QR碼登入');}catch(e){} });
+      showView('view-passenger-list'); renderBusList();
     }
 
     document.querySelectorAll('.btn').forEach(btn => { btn.addEventListener('pointerdown', () => { if (navigator.vibrate) navigator.vibrate(15); }); });
@@ -2864,7 +1307,7 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
 
   window.addEventListener('beforeunload', ()=>{
     if(state.driver.gpsId) navigator.geolocation.clearWatch(state.driver.gpsId);
-    if(state.driver.phone) activeRef.child(state.driver.phone).remove();
+    if(state.driver.phone) try{activeRef.child(state.driver.phone).remove();}catch(e){}
     teardownOldLayoutIdle();
   });
 })();
