@@ -1,13 +1,16 @@
+ 
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>西鐵小巴 v8.8.0 · 終極無瑕完美版</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<!-- Firebase SDK (Correct CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" defer></script>
+<!-- QRCode.js -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
 <style>
 :root {
   --bg: #0f0f0f; --card: #1c1c1e; --gold: #ffcc00;
@@ -27,7 +30,6 @@ body {
 .title { font-size: 30px; font-weight: 800; color: var(--gold); }
 .dev-tag { font-size: 16px; color: #aaa; display: inline-block; padding: 4px 18px; border-radius: 20px; cursor: pointer; }
 
-/* 隱私聲明橫幅 */
 .privacy-notice {
   background: linear-gradient(90deg, #3a1c1c, #4a2020);
   color: #ff453a;
@@ -35,6 +37,403 @@ body {
   font-size: 12px;
   text-align: center;
   border-bottom: 2px solid #ff453a;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.privacy-notice strong { color: #ffcc00; }
+
+.global-voice-toggle {
+  position: absolute; top: 10px; right: 10px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--green); border: none; color: #fff;
+  font-size: 24px; cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s;
+}
+.global-voice-toggle.muted { background: var(--red); }
+
+.floating-announce {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--green); border: none; color: #fff;
+  font-size: 28px; cursor: pointer; z-index: 15;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  transition: all 0.3s;
+}
+.floating-announce.has-new { background: var(--orange); animation: pulse-orange 1s infinite; }
+@keyframes pulse-orange { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+.view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
+.view.active { display: flex; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
+.btn {
+  width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700;
+  border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
+.btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
+.btn-secondary { background: #3a3a3c; }
+.btn-warn { background: #ff9f0a; color: #000; }
+.btn-green { background: var(--green); }
+.btn-red { background: var(--red); }
+.row { display: flex; gap: 12px; margin-bottom: 10px; }
+.row > * { flex: 1; }
+.badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
+.badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
+.big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
+.station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
+.target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
+.route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
+.dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; transition: all 0.3s; }
+.dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; transition: all 0.3s; }
+
+.dot-node.passed .dot { background: #666; border-color: #888; }
+.dot-node.current .dot { background: var(--green); box-shadow: 0 0 14px var(--green); border-color: #fff; }
+.dot-node.current span { font-weight: 800; color: #fff; }
+.dot-node.next .dot { background: var(--green); animation: blink-green 1s infinite; border-color: #fff; }
+.dot-node.next span { font-weight: 700; color: var(--green); }
+@keyframes blink-green { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
+.msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
+.msg-row {
+  display: flex; gap: 10px; align-items: center; justify-content: center;
+  max-width: 500px; margin: 0 auto 8px auto;
+}
+.msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
+.record-btn, .send-btn {
+  width: 48px; height: 48px; border-radius: 14px; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0;
+}
+.record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
+.record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
+.send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
+.record-btn.recording .record-timer { display: block; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
+.driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
+.driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
+.driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
+.play-audio { background: var(--blue); color: #fff; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+
+.announce-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.95); z-index: 30; display: none;
+  flex-direction: column; padding: 16px;
+}
+.announce-overlay.show { display: flex; }
+.announce-list { flex: 1; overflow-y: auto; background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 12px; }
+.announce-item {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  border-left: 4px solid var(--gold);
+}
+.announce-item .time { font-size: 12px; color: #888; margin-bottom: 4px; }
+.announce-item .text { font-size: 16px; line-height: 1.5; }
+
+.admin-panel { background: #1a0a2e; border: 2px solid var(--gold); }
+.admin-panel .title { color: var(--gold); font-size: 24px; margin-bottom: 12px; }
+.admin-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+}
+.admin-stat-card {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; text-align: center;
+}
+.admin-stat-card .label { font-size: 14px; color: #888; }
+.admin-stat-card .value { font-size: 32px; font-weight: 800; color: var(--gold); }
+.admin-vehicle-item, .admin-log-item, .admin-ban-item {
+  background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+  border-left: 4px solid var(--blue);
+}
+.admin-vehicle-item .plate, .admin-ban-item .identifier { font-size: 18px; font-weight: 700; color: var(--gold); }
+.admin-vehicle-item .info, .admin-log-item .info, .admin-ban-item .info { font-size: 14px; color: #ccc; margin-top: 4px; }
+.admin-announce-form { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.admin-announce-form textarea, .admin-ban-form input {
+  width: 100%; min-height: 80px; background: #1a1a1a; color: #fff;
+  border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 16px;
+  resize: vertical;
+}
+.admin-ban-form input { min-height: auto; margin-bottom: 8px; }
+.admin-tabs {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.admin-tab {
+  flex: 1; padding: 10px; background: #2c2c2e; border: none; color: #888;
+  border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 700;
+  transition: all 0.3s;
+}
+.admin-tab.active { background: var(--gold); color: #000; }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">西鐵小巴 v8.8.0</div>
+  <div class="dev-tag" id="dev-tag">開發者：大輝 (連打5次認證)</div>
+  <button class="global-voice-toggle" id="global-voice-btn" title="全局語音開關">🔊</button>
+</div>
+
+<div class="privacy-notice">
+  ⚠️ <strong>安全提示</strong>：本系統會記錄所有使用者的IP位址、裝置資料及操作紀錄，以保障系統安全。相關資料有需要時會提供給警方作執法用途。管理員可隨時查閱所有紀錄。
+</div>
+
+<button class="floating-announce" id="announce-fab">📢</button>
+
+<!-- 乘客主頁 -->
+<div class="view active" id="view-passenger">
+  <div class="card">
+    <div class="station-name">屯門站</div>
+    <div class="target-station">下一站：兆康站</div>
+    <div class="big-number" id="eta-display">2</div>
+    <div style="text-align:center;color:#aaa;">分鐘</div>
+    <div id="qrcode-target" style="display:flex;justify-content:center;margin:10px 0;"></div>
+  </div>
+  <div class="card">
+    <div class="route-strip" id="route-strip">
+      <div class="dot-node passed"><div class="dot"></div><span>屯門</span></div>
+      <div class="dot-node current"><div class="dot"></div><span>兆康</span></div>
+      <div class="dot-node next"><div class="dot"></div><span>天水圍</span></div>
+      <div class="dot-node"><div class="dot"></div><span>朗屏</span></div>
+      <div class="dot-node"><div class="dot"></div><span>元朗</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <button class="btn btn-portal" onclick="switchView('driver')">🚌 司機模式</button>
+      <button class="btn btn-secondary" onclick="switchView('passenger')">👥 乘客</button>
+    </div>
+    <div class="row">
+      <button class="btn btn-warn" onclick="switchView('admin')" id="admin-entry-btn">⚙️ 總管後台</button>
+    </div>
+  </div>
+  <div class="card msg-area">
+    <div class="msg-list" id="passenger-msg-list"></div>
+    <div class="msg-row">
+      <input class="msg-input" id="passenger-msg-input" placeholder="輸入訊息…" />
+      <button class="record-btn" id="passenger-record-btn">🎤<span class="record-timer" id="passenger-record-timer">0s</span></button>
+      <button class="send-btn" id="passenger-send-btn">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- 司機主頁 -->
+<div class="view" id="view-driver">
+  <div class="driver-panel-new">
+    <div class="card">
+      <div class="row">
+        <button class="btn btn-secondary" onclick="switchView('passenger')">👥 乘客視角</button>
+        <button class="btn btn-warn" onclick="switchView('admin')" id="admin-entry-driver">⚙️ 總管</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="text-align:center;font-size:20px;font-weight:700;color:var(--gold);">🟢 上線中</div>
+      <div style="text-align:center;color:#aaa;">司機：陳大文 · 車牌：NV1234</div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn btn-green" onclick="showToast('已報站：下一站天水圍')">🔊 報站</button>
+        <button class="btn btn-red" onclick="showToast('緊急訊息已發送')">🚨 緊急</button>
+      </div>
+    </div>
+    <div class="card msg-area">
+      <div class="msg-list" id="driver-msg-list"></div>
+      <div class="msg-row">
+        <input class="msg-input" id="driver-msg-input" placeholder="司機訊息…" />
+        <button class="record-btn" id="driver-record-btn">🎤<span class="record-timer" id="driver-record-timer">0s</span></button>
+        <button class="send-btn" id="driver-send-btn">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 管理後台 -->
+<div class="view" id="view-admin">
+  <div class="card admin-panel">
+    <div class="title">⚙️ 總管控制台</div>
+    <button class="btn btn-secondary" onclick="switchView('passenger')">← 返回</button>
+    <div class="admin-stats">
+      <div class="admin-stat-card"><div class="label">在線車輛</div><div class="value">12</div></div>
+      <div class="admin-stat-card"><div class="label">今日乘客</div><div class="value">847</div></div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="vehicles">車輛</button>
+      <button class="admin-tab" data-tab="announce">公告</button>
+      <button class="admin-tab" data-tab="logs">日誌</button>
+      <button class="admin-tab" data-tab="ban">封禁</button>
+    </div>
+
+    <div class="admin-section active" id="section-vehicles">
+      <div class="admin-vehicle-item"><div class="plate">NV1234</div><div class="info">司機：陳大文 · 路線：K51 · 更新：2分鐘前</div></div>
+      <div class="admin-vehicle-item"><div class="plate">KA5678</div><div class="info">司機：李小雯 · 路線：K51 · 更新：5分鐘前</div></div>
+    </div>
+
+    <div class="admin-section" id="section-announce">
+      <div class="admin-announce-form">
+        <textarea id="admin-announce-text" placeholder="輸入公告內容…"></textarea>
+        <button class="btn btn-green" onclick="sendAnnounce()">發送公告</button>
+      </div>
+      <div id="admin-announce-list"></div>
+    </div>
+
+    <div class="admin-section" id="section-logs">
+      <div class="admin-log-item"><div class="info">2026-07-09 14:22 | NV1234 | 報站：天水圍</div></div>
+      <div class="admin-log-item"><div class="info">2026-07-09 14:20 | IP 192.168.1.5 | 登入後台</div></div>
+    </div>
+
+    <div class="admin-section" id="section-ban">
+      <div class="admin-ban-form">
+        <input id="ban-identifier" placeholder="輸入車牌或UID封禁" />
+        <button class="btn btn-red" onclick="banUser()">封禁</button>
+      </div>
+      <div class="admin-ban-item"><div class="identifier">NV9999</div><div class="info">封禁原因：騷擾乘客 · 管理員：Admin</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 公告彈窗 -->
+<div class="announce-overlay" id="announce-overlay">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:24px;font-weight:700;">📢 最新公告</span>
+    <button class="btn btn-secondary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('announce-overlay').classList.remove('show')">關閉</button>
+  </div>
+  <div class="announce-list" id="announce-list">
+    <div class="announce-item"><div class="time">2026-07-09 10:00</div><div class="text">由於屯門公路工程，K51 路線將臨時改道，不便之處敬請原諒。</div></div>
+    <div class="announce-item"><div class="time">2026-07-08 15:30</div><div class="text">⚠️ 暴雨警告：請所有司機減速慢行，注意安全。</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 1. Fix vh ==========
+function setVH() {
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+setVH();
+window.addEventListener('resize', setVH);
+
+// ========== 2. Firebase Config (Fill your own) ==========
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase (only if config is filled)
+let firebaseInitialized = false;
+if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    firebaseInitialized = true;
+    console.log("Firebase initialized successfully.");
+  } catch (e) {
+    console.warn("Firebase init failed, using local mode.", e);
+  }
+} else {
+  console.warn("Firebase not configured. Running in local demo mode.");
+}
+
+// ========== 3. View Switching ==========
+function switchView(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById('view-' + viewId);
+  if (target) target.classList.add('active');
+}
+
+// ========== 4. Global Voice Toggle ==========
+let isMuted = false;
+document.getElementById('global-voice-btn').addEventListener('click', function() {
+  isMuted = !isMuted;
+  this.classList.toggle('muted', isMuted);
+  this.textContent = isMuted ? '🔇' : '🔊';
+  showToast(isMuted ? '語音已關閉' : '語音已開啟');
+});
+
+// ========== 5. Toast ==========
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ========== 6. Message Send (Local Demo) ==========
+function sendMessage(role) {
+  const input = document.getElementById(role + '-msg-input');
+  const list = document.getElementById(role + '-msg-list');
+  const text = input.value.trim();
+  if (!text) return;
+  const msgDiv = document.createElement('div');
+  msgDiv.style.cssText = 'padding:6px 0;border-bottom:1px solid #333;font-size:15px;';
+  msgDiv.textContent = (role === 'driver' ? '🚌 司機: ' : '👤 乘客: ') + text;
+  list.appendChild(msgDiv);
+  list.scrollTop = list.scrollHeight;
+  input.value = '';
+  // If Firebase initialized, also push to database
+  if (firebaseInitialized) {
+    try {
+      firebase.database().ref('messages/' + role).push({
+        text: text,
+        timestamp: Date.now(),
+        sender: role
+      });
+    } catch (e) { console.warn('Firebase write failed', e); }
+  }
+}
+
+document.getElementById('passenger-send-btn').addEventListener('click', () => sendMessage('passenger'));
+document.getElementById('driver-send-btn').addEventListener('click', () => sendMessage('driver'));
+document.getElementById('passenger-msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage('passenger'); });
+document.getElementById('driver-msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage('driver'); });
+
+// ========== 7. Record Button Simulation ==========
+['passenger', 'driver'].forEach(role => {
+  const btn = document.getElementById(role + '-record-btn');
+  const timer = document.getElementById(role + '-record-timer');
+  let recording = false;
+  let seconds = 0;
+  let interval = null;
+
+  btn.addEventListener('click', () => {
+    if (recording) {
+      clearInterval(interval);
+      recording = false;
+      btn.classList.remove('recording');
+      timer.textContent = '0s';
+      showToast('錄音結束（模擬）');
+    } else {
+      recording = true;
+      seconds = 0;
+      timer.textContent = '0s';
+      btn.classList.add('recording');
+      interval = setInterval(() => {
+        seconds++;
+        timer.textContent = seconds + 's';
+      }, 1000);
+      showToast('開始錄音（模擬）');
+    }
+  });
+});
+
+// ========== 8. Admin Tab Switching ==========
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    d  border-bottom: 2px solid #ff453a;
   flex-shrink: 0;
   line-height: 1.4;
 }
