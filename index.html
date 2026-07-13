@@ -1,109 +1,37 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>西鐵小巴 v8.3.3 · 手機優化版</title>
-    <script src="https://cdn.bootcdn.net/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試版 - 西鐵小巴</title>
     <style>
-        /* 所有原有樣式 + 狀態欄 */
-        :root { --bg: #0f0f0f; --card: #1c1c1e; --gold: #ffcc00; --blue: #0a84ff; --red: #ff453a; --green: #30d158; --purple: #bf5af2; --radius: 18px; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
-        #status-bar { background: #222; color: #ffcc00; text-align: center; padding: 6px; font-size: 14px; flex-shrink: 0; }
-        .header { padding: 10px; text-align: center; border-bottom: 1px solid #333; flex-shrink: 0; position: relative; }
-        .title { font-size: 30px; font-weight: 800; color: var(--gold); }
-        .dev-tag { font-size: 16px; color: #aaa; display: inline-block; padding: 4px 18px; border-radius: 20px; cursor: pointer; }
-        .view { display: none; flex: 1; overflow-y: auto; padding: 12px; flex-direction: column; }
-        .view.active { display: flex; }
-        .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid #333; }
-        .btn { width: 100%; padding: 14px; border-radius: 16px; font-size: 22px; font-weight: 700; border: none; cursor: pointer; color: #fff; margin-bottom: 10px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn:active { opacity: 0.8; transform: scale(0.98); }
-        .btn-portal { background: linear-gradient(135deg, #0a84ff, #0066cc); }
-        .btn-driver { background: linear-gradient(135deg, #ff453a, #c62828); }
-        .btn-secondary { background: #3a3a3c; }
-        .btn-warn { background: #ff9f0a; color: #000; }
-        .btn-green { background: var(--green); }
-        .btn-red { background: var(--red); }
-        .row { display: flex; gap: 12px; margin-bottom: 10px; }
-        .row > * { flex: 1; }
-        .badge { display: inline-block; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 20px; margin: 4px; }
-        .badge-red { background: var(--red); } .badge-blue { background: var(--blue); } .badge-purple { background: var(--purple); }
-        .big-number { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; line-height: 1.1; color: var(--gold); }
-        .station-name { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0; color: var(--gold); }
-        .target-station { font-size: 20px; color: var(--gold); text-align: center; margin-top: 4px; }
-        .route-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-top: 1px solid #333; margin-top: 8px; }
-        .dot-node { flex: 0 0 100px; text-align: center; font-size: 14px; }
-        .dot { width: 28px; height: 28px; border-radius: 50%; background: #444; margin: 0 auto 6px; border: 3px solid #555; }
-        .dot-node.active .dot { background: #30d158; box-shadow: 0 0 14px #30d158; border-color: #fff; }
-        .dot-node.active span { font-weight: 800; color: #fff; }
-        .msg-area { background: #1a1a1a; border-radius: 14px; padding: 12px; margin-top: 8px; }
-        .msg-list { max-height: 160px; overflow-y: auto; margin-bottom: 8px; font-size: 16px; }
-        .msg-row { display: flex; gap: 10px; align-items: center; justify-content: center; max-width: 500px; margin: 0 auto 8px auto; }
-        .msg-input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-        .record-btn, .send-btn { width: 48px; height: 48px; border-radius: 14px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; flex-shrink: 0; }
-        .record-btn { background: #ff9f0a; color: #000; font-size: 24px; }
-        .record-btn.recording { background: #ff0000; color: #fff; animation: pulse 0.6s infinite; }
-        .send-btn { background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-        .record-timer { position: absolute; top: -6px; right: -6px; background: #ff0000; color: #fff; border-radius: 8px; padding: 2px 6px; font-size: 10px; display: none; }
-        .record-btn.recording .record-timer { display: block; }
-        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 18px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .toast.show { opacity: 1; }
-        .overlay-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 26px; padding: 14px 24px; font-weight: 800; font-size: 20px; box-shadow: 0 4px 18px rgba(255,204,0,0.4); z-index: 10; }
-        .driver-scroll-container { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-        .driver-snap-section { scroll-snap-align: start; min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px; gap: 12px; }
-        .driver-panel-new { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-bottom: 10px; }
-        .admin-panel { background: #2c1a3a; border: 1px solid var(--gold); }
-        .admin-input { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 18px; background: #2c2c2e; color: #fff; }
-        .banned-item { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; }
-        .log-entry { background: #1a1a1a; padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; font-size: 14px; color: #ddd; }
-        .announce-bell { position: fixed; top: 12px; right: 12px; z-index: 30; background: #333; color: #fff; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 24px; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .announce-bell.has-announce { display: flex; background: #ffcc00; color: #000; }
-        .announce-bell .dot-badge { position: absolute; top: -2px; right: -2px; background: #ff0000; border-radius: 50%; width: 12px; height: 12px; }
-        .announce-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 40; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .announce-modal.active { display: flex; }
-        .announce-modal .modal-card { background: #2c1a3a; border: 2px solid var(--gold); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; }
-        .announce-modal .modal-text { font-size: 22px; color: #fff; margin-bottom: 16px; }
-        .announce-modal .close-btn { background: var(--gold); color: #000; border: none; padding: 12px 24px; border-radius: 14px; font-size: 20px; font-weight: bold; cursor: pointer; }
-        .change-pwd-section { margin-top: 20px; border-top: 1px solid #555; padding-top: 16px; }
-        .test-btn { background: #ff9f0a; color: #000; }
+        body { background: #0f0f0f; color: white; padding: 20px; font-family: sans-serif; }
+        button { width: 100%; padding: 20px; font-size: 24px; margin-bottom: 10px; border-radius: 16px; border: none; cursor: pointer; }
+        .btn-test { background: #ffcc00; color: #000; }
+        .btn-blue { background: #0a84ff; color: #fff; }
+        #status { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
-<!-- 狀態欄 -->
-<div id="status-bar">⏳ 載入中…</div>
+    <div id="status">⏳ 載入中…</div>
+    <button class="btn-test" id="btn-test">🧪 測試掣</button>
+    <button class="btn-blue" id="btn-passenger">🧍‍♂️ 乘客入口</button>
 
-<div class="header">
-    <div class="title">西鐵小巴 v8.3.3</div>
-    <div class="dev-tag" id="dev-tag">開發者：大輝</div>
-</div>
+    <script>
+        document.getElementById('status').textContent = '✅ JavaScript 已執行';
 
-<button class="announce-bell" id="announce-bell">🔔<span class="dot-badge"></span></button>
-<div class="announce-modal" id="announce-modal">
-    <div class="modal-card">
-        <div class="modal-text" id="announce-modal-text"></div>
-        <button class="close-btn" id="announce-modal-close">關閉</button>
-    </div>
-</div>
+        document.getElementById('btn-test').addEventListener('click', function() {
+            alert('🎉 測試成功！按鈕有反應！');
+        });
 
-<!-- 大堂 -->
-<div id="view-lobby" class="view active">
-    <div class="card" style="text-align:left;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:20px; font-weight:bold; color:var(--gold);">📋 使用說明</span>
-            <button class="btn" style="width:auto; padding:10px 20px; background:var(--gold); color:#000;" id="btn-guide-voice">🔊 聆聽教學</button>
-        </div>
-        <div style="margin-top:10px; color:#ccc; line-height:1.6;">
-            🚏 <b>司機</b>：登入 → 開始當值 → 自動GPS報站 / 手動調整<br>
-            🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
-            🎤 <b>長按錄音</b> 可發送語音訊息
-        </div>
-    </div>
-    <!-- 測試按鈕 -->
-    <button class="btn test-btn" id="btn-test">🧪 測試（撳我睇下有冇反應）</button>
+        document.getElementById('btn-passenger').addEventListener('click', function() {
+            alert('乘客入口被撳咗！');
+        });
+
+        console.log('所有事件已綁定');
+    </script>
+</body>
+</html>    <button class="btn test-btn" id="btn-test">🧪 測試（撳我睇下有冇反應）</button>
     <button class="btn btn-portal" id="btn-passenger">🧍‍♂️ 乘客入口</button>
     <button class="btn btn-driver" id="btn-driver">🚏 司機入口</button>
     <button class="btn btn-warn" id="btn-generate-qr">📱 分享乘客二維碼</button>
