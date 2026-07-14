@@ -278,4 +278,248 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh
     </div>
     <div class="driver-snap-section">
       <div class="msg-area">
+        <div class="msg-l.badge{display:inline-block;padding:6px 16px;border-radius:30px;font-size:18px;font-weight:700;margin:3px 4px}
+.badge-red{background:var(--red)}.badge-blue{background:var(--blue)}.badge-purple{background:var(--purple)}.badge-green{background:var(--green);color:#000}
+.big-number{font-size:72px;font-weight:900;text-align:center;color:var(--gold);line-height:1;margin:4px 0}
+.station-name{font-size:32px;font-weight:700;text-align:center;color:var(--gold);margin:4px 0}
+.target-station{font-size:18px;color:var(--text2);text-align:center}
+.text-muted{color:var(--text2);font-size:16px}.text-center{text-align:center}
+.flex{display:flex;align-items:center;gap:10px}.flex-between{display:flex;justify-content:space-between;align-items:center}
+.route-strip{display:flex;overflow-x:auto;gap:14px;padding:10px 4px 14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.route-strip::-webkit-scrollbar{height:3px}
+.route-strip::-webkit-scrollbar-thumb{background:var(--gold);border-radius:8px}
+.dot-node{flex:0 0 90px;text-align:center;font-size:13px;color:var(--text2);transition:.25s}
+.dot{width:30px;height:30px;border-radius:50%;background:#333;margin:0 auto 6px;border:3px solid #444;transition:.3s}
+.dot-node.passed .dot{background:#555;border-color:#777}
+.dot-node.current .dot{background:var(--green);box-shadow:0 0 20px var(--green);border-color:#fff}
+.dot-node.current span{color:#fff;font-weight:800}
+.dot-node.next .dot{background:var(--green);animation:blink 1s infinite;border-color:#fff}
+.dot-node.next span{color:var(--green);font-weight:700}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.msg-area{background:#121216;border-radius:16px;padding:12px;margin-top:8px;border:1px solid #2a2a32}
+.msg-list{max-height:180px;overflow-y:auto;margin-bottom:10px;font-size:16px;line-height:1.5}
+.msg-item{padding:6px 0;border-bottom:1px solid #1e1e24;display:flex;gap:8px;align-items:flex-start}
+.msg-item .sender{font-weight:700;color:var(--gold);flex-shrink:0}
+.msg-item .time{font-size:12px;color:#666;flex-shrink:0;margin-left:auto}
+.msg-item .text{word-break:break-word}
+.msg-row{display:flex;gap:10px;align-items:center;max-width:500px;margin:0 auto}
+.msg-input{flex:1;padding:12px 16px;border-radius:14px;border:1px solid #333;font-size:18px;background:#1e1e24;color:#fff;outline:none}
+.msg-input:focus{border-color:var(--gold)}
+.record-btn{width:50px;height:50px;border-radius:14px;border:none;background:var(--orange);color:#000;font-size:24px;cursor:pointer;flex-shrink:0;transition:.2s;position:relative}
+.record-btn.recording{background:var(--red);color:#fff;animation:pulse .5s infinite}
+.record-btn .timer-badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;display:none}
+.record-btn.recording .timer-badge{display:block}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.send-btn{width:50px;height:50px;border-radius:14px;border:none;background:var(--blue);color:#fff;font-size:18px;font-weight:700;cursor:pointer;flex-shrink:0}
+.driver-panel{display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.admin-panel{background:#140a24;border:2px solid var(--gold)}
+.admin-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.admin-tab{flex:1;min-width:60px;padding:10px 8px;background:#2a2a32;border:none;color:#888;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.admin-tab.active{background:var(--gold);color:#000}
+.admin-section{display:none}.admin-section.active{display:block}
+.admin-input{width:100%;padding:14px;border-radius:12px;border:1px solid #333;font-size:18px;background:#1e1e24;color:#fff;margin-bottom:8px;outline:none}
+.admin-input:focus{border-color:var(--gold)}
+.admin-item{background:#1a1a22;border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:4px solid var(--blue)}
+.admin-item .label{font-weight:700;color:var(--gold)}
+.admin-item .sub{color:var(--text2);font-size:14px;margin-top:2px}
+.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.admin-stat{background:#1a1a22;border-radius:14px;padding:14px;text-align:center}
+.admin-stat .num{font-size:34px;font-weight:900;color:var(--gold)}
+.admin-stat .lbl{font-size:13px;color:#888}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:30;display:none;flex-direction:column;padding:20px}
+.overlay.show{display:flex}
+.overlay-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-shrink:0}
+.overlay-header h2{font-size:24px}
+.overlay-body{flex:1;overflow-y:auto}
+.announce-item{background:#1a1a22;border-radius:12px;padding:12px 16px;margin-bottom:10px;border-left:4px solid var(--gold)}
+.announce-item .time{font-size:12px;color:#666}
+.announce-item .text{font-size:17px;margin-top:4px}
+#qr-box canvas{display:block;margin:0 auto;border-radius:12px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#2a2a32;color:#fff;padding:12px 28px;border-radius:30px;font-size:17px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:90%;text-align:center}
+.toast.show{opacity:1}
+.login-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+.login-modal.show{display:flex}
+.login-card{background:var(--card);border:2px solid var(--gold);border-radius:var(--radius);padding:28px 24px;max-width:400px;width:100%;text-align:center}
+.login-card h2{color:var(--gold);margin-bottom:16px}
+.login-card input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid #333;font-size:20px;background:#1e1e24;color:#fff;margin:6px 0;outline:none}
+.login-card input:focus{border-color:var(--gold)}
+.login-card .btn{margin-top:8px}
+.login-card .error{color:var(--red);font-size:16px;margin-top:8px;min-height:24px}
+.driver-scroll-container{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
+.driver-snap-section{scroll-snap-align:start;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:10px 0;gap:12px}
+.fps-code{background:#000;padding:12px;border-radius:12px;cursor:pointer;font-size:18px;font-weight:700;color:var(--gold);text-align:center}
+.fps-code:active{opacity:.7}
+@media(max-width:480px){.title{font-size:24px}.btn{font-size:18px;padding:14px}.big-number{font-size:54px}.station-name{font-size:26px}.dot-node{flex:0 0 70px;font-size:11px}.dot{width:24px;height:24px}.header-actions{right:8px}.header-btn{width:36px;height:36px;font-size:16px}}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- 登入 Modal -->
+<div class="login-modal" id="login-modal">
+  <div class="login-card">
+    <h2>📱 手機登入</h2>
+    <p style="color:#aaa;font-size:16px;margin-bottom:12px;">輸入電話號碼即可使用</p>
+    <input type="tel" id="login-phone" placeholder="電話號碼 (e.g. 98765432)" inputmode="numeric">
+    <button class="btn btn-primary" id="login-btn">登入</button>
+    <button class="btn btn-secondary" id="login-cancel">取消</button>
+    <div class="error" id="login-msg"></div>
+  </div>
+</div>
+
+<!-- 管理員密碼 Modal -->
+<div class="login-modal" id="admin-pwd-modal">
+  <div class="login-card">
+    <h2>🔐 管理員驗證</h2>
+    <input type="password" id="admin-pwd-input" placeholder="請輸入管理員密碼">
+    <button class="btn btn-primary" id="admin-pwd-btn">確認</button>
+    <button class="btn btn-secondary" id="admin-pwd-cancel">取消</button>
+    <div class="error" id="admin-pwd-msg"></div>
+  </div>
+</div>
+
+<!-- 公告 Overlay -->
+<div class="overlay" id="announce-overlay">
+  <div class="overlay-header"><h2>📢 系統公告</h2><button class="btn btn-secondary" style="width:auto;padding:8px 20px;font-size:16px;" id="close-announce-overlay">✕ 關閉</button></div>
+  <div class="overlay-body" id="announce-list-content"><div class="text-muted text-center" style="padding:30px;">暫無公告</div></div>
+</div>
+
+<!-- 司機訊息浮層 -->
+<div class="overlay" id="msg-overlay">
+  <div class="overlay-header"><h2>📨 乘客訊息</h2><button class="btn btn-secondary" style="width:auto;padding:8px 20px;font-size:16px;" id="close-msg-overlay">✕ 關閉</button></div>
+  <div class="overlay-body">
+    <div class="msg-list" id="driver-msg-list-overlay" style="max-height:100%;background:#121216;border-radius:14px;padding:10px;"></div>
+    <div class="msg-row" style="margin-top:10px;">
+      <button class="record-btn" id="btn-driver-record-overlay">🎤<span class="timer-badge" id="driver-timer-overlay">0s</span></button>
+      <input id="driver-msg-input-overlay" class="msg-input" placeholder="廣播訊息…">
+      <button class="send-btn" id="btn-driver-send-overlay">發</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="btn-driver-clear-overlay">清除訊息</button>
+  </div>
+</div>
+
+<!-- 頁頭 -->
+<header class="header">
+  <div class="title">西鐵小巴 <small>v10.0</small></div>
+  <div class="dev-tag" id="dev-tag">👨‍💻 開發者：大輝</div>
+  <div class="header-actions">
+    <button class="header-btn" id="global-voice-btn" title="語音開關">🔊</button>
+    <button class="header-btn" id="announce-bell" title="公告">🔔</button>
+  </div>
+</header>
+
+<!-- 大堂 -->
+<div id="view-lobby" class="view active">
+  <div class="card">
+    <div class="flex-between"><span style="font-size:20px;font-weight:700;color:var(--gold);">📋 使用說明</span><button class="btn btn-sm" style="width:auto;padding:6px 18px;background:var(--gold);color:#000;font-size:16px;" id="btn-guide-voice">🔊 聆聽教學</button></div>
+    <div style="margin-top:10px;color:#ccc;line-height:1.7;font-size:16px;">
+      🚏 <b>司機</b>：登入 → 開始當值 → 自動/手動報站 · 管理乘客<br>
+      🧍 <b>乘客</b>：登入 → 揀車追蹤 → 解鎖廣東話報站<br>
+      🎤 長按錄音掣發送語音訊息 · 📢 點擊右上鈴鐺睇公告
+    </div>
+  </div>
+  <button class="btn btn-primary" id="btn-passenger">🧍‍♂️ 乘客入口</button>
+  <button class="btn btn-danger" id="btn-driver">🚏 司機入口</button>
+  <button class="btn btn-warning" id="btn-generate-qr">📱 分享乘客二維碼</button>
+  <button class="btn btn-secondary" id="btn-admin-panel" style="display:none;">👑 總管後台</button>
+  <div class="card" style="background:#1a1028;border-color:var(--gold);">
+    <div style="color:var(--gold);font-weight:700;font-size:18px;">☕ 支持開發者</div>
+    <div class="fps-code" id="fps-code">轉數快：122891914</div>
+    <div id="copy-feedback" style="color:#666;font-size:13px;margin-top:4px;"></div>
+  </div>
+  <div id="qr-box" class="card" style="display:none;text-align:center;"><div id="qrcode-container"></div><button class="btn btn-secondary btn-sm" id="btn-close-qr">關閉二維碼</button></div>
+  <div style="color:#555;font-size:12px;text-align:center;margin-top:4px;">🔒 所有操作均受監察及記錄，以確保系統安全</div>
+</div>
+
+<!-- 乘客列表 -->
+<div id="view-passenger-list" class="view">
+  <h2 style="text-align:center;margin-bottom:12px;font-size:26px;">🚐 線上小巴</h2>
+  <p style="text-align:center;color:var(--text2);font-size:15px;margin-bottom:12px;">⬇ 點擊車輛追蹤實時位置</p>
+  <div id="bus-list-container">載入中…</div>
+  <button class="btn btn-secondary" id="btn-back-list">🔙 返回大堂</button>
+</div>
+
+<!-- 乘客追蹤 -->
+<div id="view-passenger" class="view">
+  <button id="voice-toggle" class="btn btn-warning" style="font-size:20px;">🔊 廣東話報站：<span id="voice-status-label">開啟</span></button>
+  <div class="card" id="pass-data-card">讀取中…</div>
+  <div class="route-strip" id="pass-route-strip"></div>
+  <div class="msg-area">
+    <div class="msg-list" id="pass-msg-list"></div>
+    <div class="msg-row">
+      <button class="record-btn" id="btn-pass-record">🎤<span class="timer-badge" id="pass-timer">0s</span></button>
+      <input id="pass-msg-input" class="msg-input" placeholder="留訊息俾司機…">
+      <button class="send-btn" id="btn-pass-send">發</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="btn-pass-clear">清除訊息</button>
+  </div>
+  <button class="btn btn-secondary" id="btn-back-track">🔙 返回列表</button>
+</div>
+
+<!-- 司機頁 -->
+<div id="view-driver" class="view">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px;">
+    <button class="btn btn-secondary btn-sm" id="btn-switch-layout" style="width:auto;padding:8px 16px;font-size:15px;">🔧 切換舊版面</button>
+  </div>
+  <!-- 新版面 -->
+  <div id="driver-new-panel" class="driver-panel">
+    <div class="card" style="text-align:center;padding:14px;">
+      <div style="font-size:16px;color:var(--text2);" id="d-info-new">📱 未登入 | 車牌: -</div>
+      <div style="margin:8px 0;">
+        <span class="badge badge-purple" id="d-mode-badge-new">繁忙時段</span>
+        <span class="badge badge-red" id="d-dir-badge-new">往元朗</span>
+        <span class="badge badge-green" id="d-status-badge-new">⏸ 未當值</span>
+      </div>
+      <div class="station-name" id="d-station-new">大棠黃泥墩</div>
+      <div class="target-station" id="d-target-new">下一站：大棠山路</div>
+    </div>
+    <div class="card" style="text-align:center;padding:12px;">
+      <div style="font-size:18px;color:var(--text2);">👥 乘客</div>
+      <div class="big-number" id="d-pass-count-new">0</div>
+      <div class="btn-row"><button class="btn btn-success" id="btn-add-pass-new" style="font-size:28px;padding:16px;">＋</button><button class="btn btn-danger" id="btn-sub-pass-new" style="font-size:28px;padding:16px;">－</button></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" id="btn-prev-new" style="font-size:20px;">◀ 上一站</button><button class="btn btn-primary" id="btn-next-new" style="font-size:20px;">下一站 ▶</button></div>
+    <div class="btn-row"><button class="btn btn-warning" id="d-full-btn-new" style="font-size:18px;">🚫 滿座</button><button class="btn btn-secondary" id="d-car-btn-new" style="font-size:18px;">16座</button></div>
+    <div class="btn-row"><button class="btn btn-secondary" id="btn-switch-dir-new" style="font-size:17px;">🔄 調頭</button><button class="btn" id="btn-mode-toggle-new" style="background:var(--purple);font-size:17px;">切換路線</button></div>
+    <button id="start-gps-new" class="btn btn-success" style="font-size:22px;padding:18px;">🟢 開始當值 (GPS)</button>
+    <button id="stop-gps-new" class="btn btn-danger" style="font-size:22px;padding:18px;display:none;">🔴 停止當值</button>
+    <div class="route-strip" id="d-route-strip-new"></div>
+    <div class="msg-area">
+      <div class="msg-list" id="driver-msg-list-new"></div>
+      <div class="msg-row">
+        <button class="record-btn" id="btn-driver-record-new">🎤<span class="timer-badge" id="driver-timer-new">0s</span></button>
+        <input id="driver-msg-input-new" class="msg-input" placeholder="廣播訊息…">
+        <button class="send-btn" id="btn-driver-send-new">發</button>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="btn-driver-clear-new">清除訊息</button>
+    </div>
+    <button class="btn btn-secondary" id="btn-logout-new">🚪 更換車牌 / 返回大堂</button>
+  </div>
+  <!-- 舊版面 -->
+  <div id="driver-old-panel" class="driver-scroll-container" style="display:none;">
+    <div class="driver-snap-section">
+      <div class="card">
+        <div id="d-info-old">📱 未登入 | 車牌: 未輸入</div>
+        <div id="d-mode-display-old" style="display:inline-block;padding:8px 20px;border-radius:24px;background:var(--purple);font-size:20px;font-weight:700;margin-bottom:8px;">繁忙時段</div>
+        <div id="d-dir-display-old" style="display:inline-block;padding:10px 24px;border-radius:28px;font-size:22px;font-weight:700;margin-bottom:8px;background:var(--red);">往 元朗</div>
+        <div class="station-name" id="d-station-old">大棠黃泥墩</div>
+        <div class="btn-row"><button id="btn-prev-old" class="btn btn-primary">◀ 上一站</button><button id="btn-next-old" class="btn btn-primary">下一站 ▶</button></div>
+      </div>
+      <div class="btn-row"><button id="d-mode-busy-old" class="btn btn-secondary">繁忙時段</button><button id="d-mode-normal-old" class="btn btn-secondary">非繁忙</button></div>
+      <button id="start-gps-old" class="btn btn-success">🟢 開始當值</button>
+      <button id="stop-gps-old" class="btn btn-danger" style="display:none;">🔴 停止當值</button>
+      <button id="switch-dir-old" class="btn btn-secondary" style="display:none;">🔄 切換方向</button>
+      <div class="route-strip" id="d-route-container-old" style="display:none;"></div>
+    </div>
+    <div class="driver-snap-section">
+      <div class="card">
+        <div>目前乘客數</div>
+        <div class="big-number" id="d-pass-count-old" style="color:var(--gold);">0</div>
+        <div class="btn-row"><button class="btn btn-success" id="btn-add-pass-old">＋</button><button class="btn btn-danger" id="btn-sub-pass-old">－</button></div>
+        <div class="btn-row"><button id="d-car16-old" class="btn btn-secondary">16座</button><button id="d-car19-old" class="btn btn-secondary">19座</button></div>
+        <button id="d-fullBtn-old" class="btn btn-warning" style="font-size:22px;">🚫 滿座</button>
+      </div>
+    </div>
+    <div class="driver-snap-section">
+      <div class="msg-area">
         <div class="msg-l
