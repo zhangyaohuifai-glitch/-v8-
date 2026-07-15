@@ -8,40 +8,43 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,sans-serif; }
-body { background:#0f0f0f; color:#fff; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-.header { padding:12px; text-align:center; border-bottom:1px solid #333; flex-shrink:0; }
-.title { font-size:28px; font-weight:800; color:#ffcc00; }
-.card { background:#1c1c1e; border-radius:18px; padding:20px; margin:12px; border:1px solid #333; }
-.btn { width:100%; padding:16px; border-radius:16px; font-size:20px; font-weight:700; border:none; cursor:pointer; color:#fff; margin-bottom:10px; }
-.btn-portal { background:linear-gradient(135deg,#0a84ff,#0066cc); }
-.btn-warn { background:#ff9f0a; color:#000; }
-.btn-secondary { background:#3a3a3c; }
-.btn-green { background:#30d158; }
-.btn-red { background:#ff453a; }
-input { width:100%; padding:14px; border-radius:12px; border:none; font-size:18px; background:#2c2c2e; color:#fff; margin-bottom:10px; }
-.toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:12px 28px; border-radius:30px; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none; }
-.toast.show { opacity:1; }
-.view { display:none; flex:1; overflow-y:auto; padding:12px; flex-direction:column; }
-.view.active { display:flex; }
-.login-modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:50; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
-.login-modal.active { display:flex; }
-.login-card { background:#1c1c1e; border:2px solid #ffcc00; border-radius:20px; padding:24px; max-width:400px; width:100%; text-align:center; }
-.error-msg { color:#ff453a; margin-top:8px; font-size:16px; }
-.log-entry { background:#1a1a1a; padding:8px 12px; border-radius:8px; margin-bottom:4px; font-size:14px; color:#ddd; }
+:root{--bg:#0f0f0f;--card:#1c1c1e;--gold:#ffcc00;--blue:#0a84ff;--red:#ff453a;--green:#30d158}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:var(--bg);color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:12px;text-align:center;border-bottom:1px solid #333;flex-shrink:0}
+.title{font-size:28px;font-weight:800;color:var(--gold)}
+.card{background:var(--card);border-radius:18px;padding:20px;margin:12px;border:1px solid #333}
+.btn{width:100%;padding:16px;border-radius:16px;font-size:20px;font-weight:700;border:none;cursor:pointer;color:#fff;margin-bottom:10px}
+.btn-portal{background:linear-gradient(135deg,#0a84ff,#0066cc)}
+.btn-warn{background:#ff9f0a;color:#000}
+.btn-secondary{background:#3a3a3c}
+.btn-green{background:var(--green)}
+.btn-red{background:var(--red)}
+input{width:100%;padding:14px;border-radius:12px;border:none;font-size:18px;background:#2c2c2e;color:#fff;margin-bottom:10px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 28px;border-radius:30px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.view{display:none;flex:1;overflow-y:auto;padding:12px;flex-direction:column}
+.view.active{display:flex}
+.login-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.login-modal.active{display:flex}
+.login-card{background:#1c1c1e;border:2px solid var(--gold);border-radius:20px;padding:24px;max-width:400px;width:100%;text-align:center}
+.error-msg{color:var(--red);margin-top:8px;font-size:16px}
+.log-entry{background:#1a1a1a;padding:8px 12px;border-radius:8px;margin-bottom:4px;font-size:14px;color:#ddd}
+.row{display:flex;gap:12px}
+.row .btn{flex:1}
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="title">西鐵小巴 v9.0</div>
-  <div style="font-size:14px; color:#aaa;">開發者：大輝</div>
+  <div style="font-size:14px;color:#aaa;">開發者：大輝</div>
 </div>
 
 <!-- 登入彈窗 -->
 <div class="login-modal" id="login-modal">
   <div class="login-card">
-    <h2 style="color:#ffcc00; margin-bottom:16px;">🔐 登入</h2>
+    <h2 style="color:var(--gold);margin-bottom:16px;">🔐 登入</h2>
     <div id="login-choice">
       <button class="btn btn-portal" id="login-as-admin">👑 管理員</button>
       <button class="btn btn-green" id="login-as-user">🧍 乘客/司機</button>
@@ -66,8 +69,8 @@ input { width:100%; padding:14px; border-radius:12px; border:none; font-size:18p
 <!-- 大堂 -->
 <div id="view-lobby" class="view active">
   <div class="card">
-    <h3 style="color:#ffcc00;">📋 使用說明</h3>
-    <p style="color:#ccc; line-height:1.8; margin-top:8px;">
+    <h3 style="color:var(--gold);">📋 使用說明</h3>
+    <p style="color:#ccc;line-height:1.8;margin-top:8px;">
       🚏 司機：登入 → 開始當值<br>
       🧍 乘客：登入 → 追蹤車輛<br>
       👑 管理員：登入 → 總管後台
@@ -95,13 +98,13 @@ input { width:100%; padding:14px; border-radius:12px; border:none; font-size:18p
 <!-- 司機版面 -->
 <div id="view-driver" class="view">
   <div class="card">
-    <div id="d-info" style="font-size:18px; color:#aaa;">未登入</div>
-    <div class="station-name" id="d-station" style="font-size:30px; font-weight:700; color:#ffcc00; margin:8px 0;">大棠黃泥墩</div>
-    <div id="d-target" style="font-size:18px; color:#ffcc00;">下一站：大棠山路</div>
-    <div style="font-size:48px; font-weight:800; color:#ffcc00; margin:8px 0;" id="d-pass-count">0</div>
-    <div class="row" style="display:flex; gap:12px;">
-      <button class="btn btn-green" id="btn-add-pass" style="flex:1;">＋ 乘客</button>
-      <button class="btn btn-red" id="btn-sub-pass" style="flex:1;">－ 乘客</button>
+    <div id="d-info" style="font-size:18px;color:#aaa;">未登入</div>
+    <div id="d-station" style="font-size:30px;font-weight:700;color:var(--gold);margin:8px 0;">大棠黃泥墩</div>
+    <div id="d-target" style="font-size:18px;color:var(--gold);">下一站：大棠山路</div>
+    <div id="d-pass-count" style="font-size:48px;font-weight:800;color:var(--gold);margin:8px 0;">0</div>
+    <div class="row">
+      <button class="btn btn-green" id="btn-add-pass">＋ 乘客</button>
+      <button class="btn btn-red" id="btn-sub-pass">－ 乘客</button>
     </div>
     <button class="btn btn-portal" id="btn-prev">◀ 上一站</button>
     <button class="btn btn-portal" id="btn-next">下一站 ▶</button>
@@ -113,9 +116,9 @@ input { width:100%; padding:14px; border-radius:12px; border:none; font-size:18p
 
 <!-- 管理後台 -->
 <div id="view-admin" class="view">
-  <div class="card" style="border:2px solid #ffcc00; background:#1a0a2e;">
-    <h2 style="color:#ffcc00;">🛡️ 總管後台</h2>
-    <div id="admin-status" style="color:#aaa; margin:8px 0;">載入中...</div>
+  <div class="card" style="border:2px solid var(--gold);background:#1a0a2e;">
+    <h2 style="color:var(--gold);">🛡️ 總管後台</h2>
+    <div id="admin-status" style="color:#aaa;margin:8px 0;">載入中...</div>
     <div id="admin-vehicle-list"></div>
     <button class="btn btn-secondary" id="btn-back-admin">返回大堂</button>
   </div>
@@ -125,7 +128,7 @@ input { width:100%; padding:14px; border-radius:12px; border:none; font-size:18p
 
 <script>
 // ============================================================
-//  FIREBASE 設定（你嘅新 Config）
+//  FIREBASE 設定
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyCnToMYsM7pIGeGHLt5xFbQfT5RAIWzTQA",
@@ -137,7 +140,6 @@ const firebaseConfig = {
   appId: "1:434506286219:web:00a57d319da5c6cc4fc08e"
 };
 
-// 初始化 Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
@@ -153,14 +155,9 @@ let driverData = {
   plate: null
 };
 let busListRef = null;
+let gpsInterval = null;
 
-// ============================================================
-//  站點資料
-// ============================================================
-const BUSY = ["大棠黃泥墩","大棠山路","大棠村迴旋處","水蕉新村","曉門","南坑排","南坑村","紅棗田","崇正公立學校","深涌村","禮修村公廁","蝶翠峰","富達廣場","合益路","鳳翔路","元朗站H出口（朗明街）"];
-const NORMAL = ["大棠黃泥墩","大棠山路","大棠村迴旋處","水蕉新村","曉門","南坑排","南坑村","紅棗田","崇正公立學校","深涌村","禮修村公廁","蝶翠峰","富達廣場","教育路麥當勞","鄉議局中學","大球場","元朗廣場","余仁生（大馬路）","家居站","元朗站H出口（朗明街）","鳳翔路","合益路","富達廣場(回程)","蝶翠峰(回程)","禮修村公廁(回程)","深涌村(回程)","崇正公立學校(回程)","紅棗田(回程)","南坑村(回程)","南坑排(回程)","曉門(回程)","水蕉新村(回程)","大棠村迴旋處(回程)","大棠山路(回程)","大棠黃泥墩(終點站)"];
-
-function getRoute() { return 'busy'; } // 簡化版只用繁忙路線
+const STATIONS = ["大棠黃泥墩","大棠山路","大棠村迴旋處","水蕉新村","曉門","南坑排","南坑村","紅棗田","崇正公立學校","深涌村","禮修村公廁","蝶翠峰","富達廣場","合益路","鳳翔路","元朗站H出口（朗明街）"];
 
 // ============================================================
 //  工具函數
@@ -178,9 +175,6 @@ function showView(id) {
   document.getElementById(id).classList.add('active');
 }
 
-function encodeBase64(str) { return btoa(str); }
-function decodeBase64(str) { return atob(str); }
-
 // ============================================================
 //  登入系統
 // ============================================================
@@ -193,40 +187,35 @@ function openLoginModal() {
   document.getElementById('user-login-error').textContent = '';
 }
 
-// 取消登入
 document.getElementById('login-cancel').addEventListener('click', () => {
   document.getElementById('login-modal').classList.remove('active');
 });
 
-// 選擇管理員登入
 document.getElementById('login-as-admin').addEventListener('click', () => {
   document.getElementById('login-choice').style.display = 'none';
   document.getElementById('admin-login-form').style.display = 'block';
 });
 
-// 選擇一般用家登入
 document.getElementById('login-as-user').addEventListener('click', () => {
   document.getElementById('login-choice').style.display = 'none';
   document.getElementById('user-login-form').style.display = 'block';
 });
 
-// 返回
 document.getElementById('admin-login-back').addEventListener('click', () => {
   document.getElementById('admin-login-form').style.display = 'none';
   document.getElementById('login-choice').style.display = 'block';
 });
+
 document.getElementById('user-login-back').addEventListener('click', () => {
   document.getElementById('user-login-form').style.display = 'none';
   document.getElementById('login-choice').style.display = 'block';
 });
 
-// ===== 管理員登入（重點修復） =====
+// ===== 管理員登入（明文比對，簡單直接） =====
 document.getElementById('admin-login-btn').addEventListener('click', async function() {
   const username = document.getElementById('admin-username').value.trim();
   const password = document.getElementById('admin-password').value.trim();
   const errEl = document.getElementById('admin-login-error');
-
-  console.log('🔍 管理員登入嘗試:', username);
 
   if (!username || !password) {
     errEl.textContent = '請填寫用戶名及密碼';
@@ -234,45 +223,33 @@ document.getElementById('admin-login-btn').addEventListener('click', async funct
   }
 
   try {
-    // 先做匿名登入（Firebase 底層認證）
-    console.log('🔄 正在進行匿名登入...');
+    // 先做匿名登入
     await auth.signInAnonymously();
-    console.log('✅ 匿名登入成功');
 
     // 讀取管理員資料
-    console.log('📖 讀取管理員資料:', 'admins/' + username);
     const snap = await db.ref('admins/' + username).once('value');
     const data = snap.val();
-    console.log('📦 讀取結果:', data);
 
     if (!data) {
       errEl.textContent = '❌ 管理員帳戶不存在，請檢查 Database 是否有 admins/' + username;
-      console.error('❌ 管理員不存在');
       return;
     }
 
-    // 比對密碼（Base64 解碼）
+    // ⭐ 直接比對明文密碼（Database 入面嘅 password 要係明文）
     const storedPassword = data.password || '';
-    const decodedPassword = decodeBase64(storedPassword);
-    console.log('🔑 儲存密碼(Base64):', storedPassword);
-    console.log('🔑 解碼後:', decodedPassword);
-    console.log('🔑 輸入密碼:', password);
-
-    if (decodedPassword === password) {
+    
+    if (storedPassword === password) {
       // 成功！
       currentUser.isAdmin = true;
       currentUser.phone = username;
       document.getElementById('login-modal').classList.remove('active');
       document.getElementById('btn-admin-panel').style.display = 'block';
       showToast('✅ 管理員登入成功');
-      console.log('🎉 管理員登入成功！');
       loadAdminPanel();
     } else {
-      errEl.textContent = '❌ 密碼錯誤';
-      console.error('❌ 密碼比對失敗');
+      errEl.textContent = '❌ 密碼錯誤（Database入面係: ' + storedPassword + '）';
     }
   } catch (error) {
-    console.error('🔥 登入錯誤:', error);
     errEl.textContent = '❌ 錯誤：' + error.message;
     if (error.code === 'auth/operation-not-allowed') {
       errEl.textContent = '❌ 請去 Firebase Console → Authentication → 啟用「匿名登入」';
@@ -308,14 +285,12 @@ document.getElementById('user-login-btn').addEventListener('click', async () => 
 
 // ===== 檢查登入狀態 =====
 auth.onAuthStateChanged(async (user) => {
-  console.log('👤 Auth State Changed:', user);
   if (user && user.isAnonymous) {
     const snap = await db.ref('users/' + user.uid).once('value');
     const data = snap.val();
     if (data) {
       currentUser.uid = user.uid;
       currentUser.phone = data.phone || '';
-      // 檢查是否管理員
       const adminSnap = await db.ref('admins').once('value');
       let isAdmin = false;
       adminSnap.forEach(child => {
@@ -323,7 +298,6 @@ auth.onAuthStateChanged(async (user) => {
       });
       currentUser.isAdmin = isAdmin;
       if (isAdmin) document.getElementById('btn-admin-panel').style.display = 'block';
-      console.log('👤 當前用戶:', currentUser);
     }
   }
 });
@@ -359,7 +333,7 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 // ============================================================
-//  乘客功能（簡化）
+//  乘客功能
 // ============================================================
 function loadBusList() {
   const container = document.getElementById('bus-list-container');
@@ -375,7 +349,7 @@ function loadBusList() {
       if (Date.now() - bus.lastUpdate > 60000) continue;
       count++;
       html += `<div class="card">
-        <div style="font-size:24px; font-weight:bold; color:#ffcc00;">🚐 ${plate}</div>
+        <div style="font-size:24px;font-weight:bold;color:var(--gold);">🚐 ${plate}</div>
         <div>${bus.currentStation || '未知'} · 👥 ${bus.passengerCount || 0}人</div>
         <button class="btn btn-portal" data-plate="${plate}">追蹤</button>
       </div>`;
@@ -395,8 +369,8 @@ function trackBus(plate) {
     const bus = snap.val();
     if (!bus) { card.innerHTML = '車輛已離線'; return; }
     card.innerHTML = `
-      <div style="font-size:24px; font-weight:bold; color:#ffcc00;">🚐 ${plate}</div>
-      <div style="font-size:28px; font-weight:700; color:#ffcc00;">${bus.currentStation || '未知'}</div>
+      <div style="font-size:24px;font-weight:bold;color:var(--gold);">🚐 ${plate}</div>
+      <div style="font-size:28px;font-weight:700;color:var(--gold);">${bus.currentStation || '未知'}</div>
       <div>下一站：${bus.nextStation || '無'}</div>
       <div>👥 ${bus.passengerCount || 0}人</div>
     `;
@@ -414,10 +388,8 @@ document.getElementById('btn-back-track').addEventListener('click', () => {
 });
 
 // ============================================================
-//  司機功能（簡化）
+//  司機功能
 // ============================================================
-let gpsInterval = null;
-
 function initDriverPanel() {
   if (!driverData.plate) {
     const plate = prompt('請輸入車牌號碼 (例如：AB1234)');
@@ -430,7 +402,6 @@ function initDriverPanel() {
     }
   }
   updateDriverUI();
-  // 監聽車輛數據
   const busRef = db.ref('van/active_buses/' + driverData.plate);
   busRef.on('value', snap => {
     const data = snap.val();
@@ -451,13 +422,12 @@ function initDriverPanel() {
 }
 
 function updateDriverUI() {
-  const route = BUSY;
   const idx = driverData.stationIndex || 0;
-  const station = route[idx] || '未知';
-  const nextIdx = idx + 1 < route.length ? idx + 1 : 0;
+  const station = STATIONS[idx] || '未知';
+  const nextIdx = idx + 1 < STATIONS.length ? idx + 1 : 0;
   document.getElementById('d-info').textContent = `🚐 ${driverData.plate || '未設定'} · 手機: ${currentUser.phone || '未登入'}`;
   document.getElementById('d-station').textContent = station;
-  document.getElementById('d-target').textContent = '下一站：' + route[nextIdx];
+  document.getElementById('d-target').textContent = '下一站：' + STATIONS[nextIdx];
   document.getElementById('d-pass-count').textContent = driverData.passengerCount;
 }
 
@@ -477,7 +447,7 @@ document.getElementById('btn-prev').addEventListener('click', () => {
 });
 document.getElementById('btn-next').addEventListener('click', () => {
   if (!driverData.isActive) { showToast('請先開始當值'); return; }
-  if (driverData.stationIndex < BUSY.length - 1) driverData.stationIndex++;
+  if (driverData.stationIndex < STATIONS.length - 1) driverData.stationIndex++;
   else driverData.stationIndex = 0;
   updateDriverAndDB();
 });
@@ -492,7 +462,7 @@ function startDuty() {
   if (gpsInterval) clearInterval(gpsInterval);
   gpsInterval = setInterval(() => {
     if (driverData.isActive) {
-      if (driverData.stationIndex < BUSY.length - 1) driverData.stationIndex++;
+      if (driverData.stationIndex < STATIONS.length - 1) driverData.stationIndex++;
       else driverData.stationIndex = 0;
       updateDriverAndDB();
     }
@@ -512,13 +482,13 @@ function stopDuty() {
 }
 
 function updateDriverAndDB() {
-  const station = BUSY[driverData.stationIndex] || '未知';
-  const nextIdx = driverData.stationIndex + 1 < BUSY.length ? driverData.stationIndex + 1 : 0;
+  const station = STATIONS[driverData.stationIndex] || '未知';
+  const nextIdx = driverData.stationIndex + 1 < STATIONS.length ? driverData.stationIndex + 1 : 0;
   const data = {
     plate: driverData.plate,
     stationIndex: driverData.stationIndex,
     currentStation: station,
-    nextStation: BUSY[nextIdx] || '終點',
+    nextStation: STATIONS[nextIdx] || '終點',
     passengerCount: driverData.passengerCount,
     isActive: driverData.isActive,
     lastUpdate: Date.now()
@@ -550,10 +520,10 @@ function loadAdminPanel() {
       const bus = data[plate];
       if (Date.now() - bus.lastUpdate < 60000) {
         count++;
-        html += `<div class="card" style="padding:12px; margin-bottom:8px;">
-          <strong style="color:#ffcc00;">${plate}</strong>
+        html += `<div class="card" style="padding:12px;margin-bottom:8px;">
+          <strong style="color:var(--gold);">${plate}</strong>
           <div>${bus.currentStation || '未知'} · 👥 ${bus.passengerCount || 0}人</div>
-          <div style="font-size:12px; color:#888;">${bus.isActive ? '🟢 當值中' : '🔴 離線'}</div>
+          <div style="font-size:12px;color:#888;">${bus.isActive ? '🟢 當值中' : '🔴 離線'}</div>
         </div>`;
       }
     }
@@ -567,7 +537,7 @@ document.getElementById('btn-back-admin').addEventListener('click', () => {
 });
 
 // ============================================================
-//  初始化：彈出登入
+//  初始化
 // ============================================================
 setTimeout(() => {
   if (!currentUser.uid) {
@@ -575,11 +545,8 @@ setTimeout(() => {
   }
 }, 500);
 
-console.log('西鐵小巴 v9.0 已啟動');
-console.log('📌 請確保 Firebase 設定正確：');
-console.log('1. Authentication → 啟用 Anonymous');
-console.log('2. Database → 規則設為測試模式 (.read: true, .write: true)');
-console.log('3. Database → 加入 admins/97860187/password = "RmFpMjY4ODAyMTc="');
+console.log('✅ 西鐵小巴 v9.0 已啟動（明文密碼比對版本）');
+console.log('📌 請確保 Database 入面 admins/97860187/password = "Fai26880217"');
 </script>
 </body>
 </html>
