@@ -356,7 +356,7 @@ const NORMAL = ["大棠黃泥墩","大棠山路","大棠村迴旋處","水蕉新
 function getRoute() { return driverData.mode === 'busy' ? BUSY : NORMAL; }
 
 // ============================================================
-//  工具函數
+//  工具函數（修正 decodeBase64）
 // ============================================================
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -370,7 +370,10 @@ function showView(id) {
   document.getElementById(id).classList.add('active');
 }
 function encodeBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
-function decodeBase64(str) { return decodeURIComponent(escape(atob(str))); }
+function decodeBase64(str) { 
+  try { return atob(str); } 
+  catch(e) { return ''; } 
+}
 
 // ============================================================
 //  語音合成
@@ -453,7 +456,7 @@ function bindRecordBtn(btnId, timerId, callback) {
 }
 
 // ============================================================
-//  登入系統
+//  登入系統（修正密碼解碼）
 // ============================================================
 function openLoginModal() {
   document.getElementById('login-modal').classList.add('active');
@@ -481,7 +484,7 @@ document.getElementById('user-login-back').addEventListener('click', () => {
   document.getElementById('login-choice').style.display = 'block';
 });
 
-// 管理員登入
+// 管理員登入（使用 atob 直接解碼）
 document.getElementById('admin-login-btn').addEventListener('click', async () => {
   const username = document.getElementById('admin-username').value.trim();
   const password = document.getElementById('admin-password').value.trim();
@@ -492,7 +495,10 @@ document.getElementById('admin-login-btn').addEventListener('click', async () =>
     const snap = await db.ref('admins/' + username).once('value');
     const data = snap.val();
     if (!data) { errEl.textContent = '管理員帳戶不存在'; return; }
-    if (decodeBase64(data.password) === password) {
+    const storedPassword = data.password || '';
+    let decodedPassword;
+    try { decodedPassword = atob(storedPassword); } catch(e) { decodedPassword = ''; }
+    if (decodedPassword === password) {
       currentUser.isAdmin = true;
       currentUser.phone = username;
       document.getElementById('login-modal').classList.remove('active');
@@ -502,7 +508,9 @@ document.getElementById('admin-login-btn').addEventListener('click', async () =>
     } else {
       errEl.textContent = '密碼錯誤';
     }
-  } catch (e) { errEl.textContent = '錯誤：' + e.message; }
+  } catch (e) {
+    errEl.textContent = '錯誤：' + e.message;
+  }
 });
 
 // 一般用家登入
@@ -1212,7 +1220,7 @@ function loadAnnounceList() {
 setTimeout(() => {
   if (!currentUser.uid) openLoginModal();
 }, 500);
-console.log('西鐵小巴 v9.0 全面管理版已啟動');
+console.log('西鐵小巴 v9.0 全面管理版已啟動（修正 decodeBase64）');
 </script>
 </body>
 </html>
