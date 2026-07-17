@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>西鐵小巴系統 v10.1 極致流暢版</title>
+<title>西鐵小巴系統 v10.2 防卡死極致流暢版</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 <style>
@@ -58,6 +58,7 @@ body {
     text-align: center;
     font-size: 22px;
     font-weight: bold;
+    cursor: pointer;
 }
 .blue-card { background: #0a2040; }
 .green-card { background: #103018; }
@@ -194,7 +195,7 @@ body {
     font-size: 14px;
 }
 .station-active { color: var(--gold); font-weight: bold; }
-/* 對講機模組 壓縮高度 + 可摺疊 */
+/* 對講機壓縮高度 + 摺疊功能 */
 .talkbox-wrap {
     background: var(--card-bg);
     border-radius: 8px;
@@ -222,6 +223,7 @@ body {
 .talkbox-body {
     transition: max-height 0.3s ease;
     overflow: hidden;
+    max-height: 160px;
 }
 .talkbox-body.fold {
     max-height: 0px !important;
@@ -256,8 +258,9 @@ body {
     font-size: 32px;
     margin-top: 8px;
     cursor: pointer;
+    touch-action: none;
 }
-/* 可拖曳浮動按鈕 初始置頂 */
+/* 可拖曳浮動按鈕 置頂初始位置 */
 .float-btn {
     position: fixed;
     width: 56px;
@@ -272,6 +275,7 @@ body {
     justify-content: center;
     box-shadow: 0 4px 12px #0008;
     user-select: none;
+    touch-action: none;
 }
 .float-btn:active { cursor: grabbing; }
 #float-voice-btn {
@@ -301,7 +305,6 @@ body {
     border-radius: 8px;
     margin: 10px 0;
 }
-/* 防抖節流動畫優化 */
 @media (max-width: 768px) {
     .action-btn { font-size: 18px; padding: 16px; }
     .station-main-title { font-size: 28px; }
@@ -310,7 +313,7 @@ body {
 </head>
 <body>
 <div class="container">
-    <div class="header-title">🚐 西鐵小巴系統 <span style="font-size:16px">開發者·大耀 | v10.1 極致流暢版</span></div>
+    <div class="header-title">🚐 西鐵小巴系統 <span style="font-size:16px">開發者·大耀 | v10.2 防卡死流暢版</span></div>
     <div class="warn-tip">⚠️ 本系統會記錄IP、裝置資料及操作紀錄，僅作管理用途，執法機關要求時會提供相關數據。</div>
 
     <!-- 首頁入口 -->
@@ -346,7 +349,7 @@ body {
         <div class="station-main-title" id="currentStationName">大堂村迴旋處</div>
         <div class="next-station-text">下一站：<span id="nextStationName">水蕉新村</span></div>
         <div class="gps-status">📍 GPS正常 (最近站 <span id="stationDistance">27823</span>m)</div>
-        <div class="passenger-count-box" id="passengerNum">15</div>
+        <div class="passenger-count-box" id="passengerNum">3</div>
         <div class="btn-row">
             <button class="action-btn btn-add-pass" id="addPassenger">+ 乘客</button>
             <button class="action-btn btn-minus-pass" id="minusPassenger">- 乘客</button>
@@ -431,7 +434,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 全域變數
+// 全域防卡死鎖變數
 let currentView = "home";
 let activeListeners = [];
 let heartbeatTimer = null;
@@ -441,6 +444,13 @@ let audioChunks = [];
 let speechQueue = [];
 let audioContext = null;
 let gainNode = null;
+let isRecording = false; // 錄音獨佔鎖，防止多重錄音卡死
+let speechBusy = false; // 語音播放佇列鎖
+const TRIGGER_DISTANCE = 100;
+const HEARTBEAT_INTERVAL = 5000;
+const VOICE_GAIN_RATIO = 6;
+const OFFLINE_FILTER_MS = 480000;
+
 let driverData = {
     plate: "",
     phone: "",
@@ -452,71 +462,33 @@ let driverData = {
     isFull: false,
     isActive: false
 };
-// 繁忙16站 / 非繁忙35站 實測高精準經緯度
+// 站點坐標同名稱
 const COORDS_BUSY = [
-    {lat:22.4621, lng:114.0232},
-    {lat:22.4615, lng:114.0241},
-    {lat:22.4608, lng:114.0250},
-    {lat:22.4599, lng:114.0263},
-    {lat:22.4587, lng:114.0278},
-    {lat:22.4572, lng:114.0291},
-    {lat:22.4556, lng:114.0305},
-    {lat:22.4540, lng:114.0318},
-    {lat:22.4523, lng:114.0331},
-    {lat:22.4507, lng:114.0344},
-    {lat:22.4490, lng:114.0357},
-    {lat:22.4474, lng:114.0370},
-    {lat:22.4457, lng:114.0383},
-    {lat:22.4441, lng:114.0396},
-    {lat:22.4424, lng:114.0409},
+    {lat:22.4621, lng:114.0232},{lat:22.4615, lng:114.0241},{lat:22.4608, lng:114.0250},
+    {lat:22.4599, lng:114.0263},{lat:22.4587, lng:114.0278},{lat:22.4572, lng:114.0291},
+    {lat:22.4556, lng:114.0305},{lat:22.4540, lng:114.0318},{lat:22.4523, lng:114.0331},
+    {lat:22.4507, lng:114.0344},{lat:22.4490, lng:114.0357},{lat:22.4474, lng:114.0370},
+    {lat:22.4457, lng:114.0383},{lat:22.4441, lng:114.0396},{lat:22.4424, lng:114.0409},
     {lat:22.4408, lng:114.0422}
 ];
 const COORDS_NORMAL = [
-    {lat:22.4630, lng:114.0220},
-    {lat:22.4622, lng:114.0231},
-    {lat:22.4614, lng:114.0242},
-    {lat:22.4606, lng:114.0253},
-    {lat:22.4597, lng:114.0264},
-    {lat:22.4588, lng:114.0275},
-    {lat:22.4579, lng:114.0286},
-    {lat:22.4570, lng:114.0297},
-    {lat:22.4561, lng:114.0308},
-    {lat:22.4552, lng:114.0319},
-    {lat:22.4543, lng:114.0330},
-    {lat:22.4534, lng:114.0341},
-    {lat:22.4525, lng:114.0352},
-    {lat:22.4516, lng:114.0363},
-    {lat:22.4507, lng:114.0374},
-    {lat:22.4498, lng:114.0385},
-    {lat:22.4489, lng:114.0396},
-    {lat:22.4480, lng:114.0407},
-    {lat:22.4471, lng:114.0418},
-    {lat:22.4462, lng:114.0429},
-    {lat:22.4453, lng:114.0440},
-    {lat:22.4444, lng:114.0451},
-    {lat:22.4435, lng:114.0462},
-    {lat:22.4426, lng:114.0473},
-    {lat:22.4417, lng:114.0484},
-    {lat:22.4408, lng:114.0495},
-    {lat:22.4399, lng:114.0506},
-    {lat:22.4390, lng:114.0517},
-    {lat:22.4381, lng:114.0528},
-    {lat:22.4372, lng:114.0539},
-    {lat:22.4363, lng:114.0550},
-    {lat:22.4354, lng:114.0561},
-    {lat:22.4345, lng:114.0572},
-    {lat:22.4336, lng:114.0583},
-    {lat:22.4327, lng:114.0594}
+    {lat:22.4630, lng:114.0220},{lat:22.4622, lng:114.0231},{lat:22.4614, lng:114.0242},
+    {lat:22.4606, lng:114.0253},{lat:22.4597, lng:114.0264},{lat:22.4588, lng:114.0275},
+    {lat:22.4579, lng:114.0286},{lat:22.4570, lng:114.0297},{lat:22.4561, lng:114.0308},
+    {lat:22.4552, lng:114.0319},{lat:22.4543, lng:114.0330},{lat:22.4534, lng:114.0341},
+    {lat:22.4525, lng:114.0352},{lat:22.4516, lng:114.0363},{lat:22.4507, lng:114.0374},
+    {lat:22.4498, lng:114.0385},{lat:22.4489, lng:114.0396},{lat:22.4480, lng:114.0407},
+    {lat:22.4471, lng:114.0418},{lat:22.4462, lng:114.0429},{lat:22.4453, lng:114.0440},
+    {lat:22.4444, lng:114.0451},{lat:22.4435, lng:114.0462},{lat:22.4426, lng:114.0473},
+    {lat:22.4417, lng:114.0484},{lat:22.4408, lng:114.0495},{lat:22.4399, lng:114.0506},
+    {lat:22.4390, lng:114.0517},{lat:22.4381, lng:114.0528},{lat:22.4372, lng:114.0539},
+    {lat:22.4363, lng:114.0550},{lat:22.4354, lng:114.0561},{lat:22.4345, lng:114.0572},
+    {lat:22.4336, lng:114.0583},{lat:22.4327, lng:114.0594}
 ];
 const STATION_NAMES_BUSY = ["大堂苦泥墩","大堂山路","大堂村迴旋處","水蕉新村","蔴門","南坑排","南坑村","紅棗田","峎正公立","深涌村","鴻德村公廟","鱔毅牌","富達麻埌","合益路","同祿路","元朗站H"];
 const STATION_NAMES_NORMAL = ["大堂苦泥墩","大堂山路","大堂村迴旋處","水蕉新村","蔴門","南坑排","南坑村","紅棗田","峎正公立","深涌村","鴻德村公廟","鱔毅牌","富達麻埌","合益路","同祿路","元朗站H","村邊橋","田心","舊墟","橋頭","圍內","新村","嶺下","坑尾","潭邊","竹園","崗背","山頂","石塘","木橋","河邊","塘頭","壆下","坳頂","總站"];
-const TRIGGER_DISTANCE = 100; // GPS高精準觸發100米門檻
-const HEARTBEAT_INTERVAL = 5000; // 心跳5秒同步一次
-const VOICE_GAIN_RATIO = 6; // 播放音量放大6倍
-const OFFLINE_FILTER_MS = 480000; // 乘客端離線過濾8分鐘
 
-// ====================== 工具函數 ======================
-// 計算兩點經緯度距離(米)
+// ====================== 工具函數 強化防抖節流防卡 ======================
 function calcDistance(lat1,lng1,lat2,lng2) {
     const R = 6371000;
     const radLat1 = lat1 * Math.PI / 180;
@@ -526,14 +498,15 @@ function calcDistance(lat1,lng1,lat2,lng2) {
     const a = Math.sin(deltaLat/2)**2 + Math.cos(radLat1)*Math.cos(radLat2)*Math.sin(deltaLng/2)**2;
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
-// 防抖節流
-function debounce(fn, delay=300) {
+// 強防抖，最短500ms一次，杜絕快速重複點擊堆積線程
+function debounce(fn, delay=500) {
     let timer = null;
     return (...args)=>{
         clearTimeout(timer);
         timer = setTimeout(()=>fn(...args), delay);
     }
 }
+// 嚴格節流，300ms只執行一次，GPS拖曳專用
 function throttle(fn, delay=300) {
     let last = 0;
     return (...args)=>{
@@ -544,21 +517,31 @@ function throttle(fn, delay=300) {
         }
     }
 }
-// 清理所有Firebase監聽器防記憶體洩漏
+// 強制徹底清理所有後台線程，根治記憶體堆積卡死
 function cleanupAllListeners() {
     activeListeners.forEach(unsub=>unsub());
     activeListeners = [];
     if(heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
     if(gpsWatchId) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+    // 強制停止錄音
+    if(isRecording && mediaRecorder) {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+        mediaRecorder = null;
+        isRecording = false;
+    }
+    // 清空音頻佇列
+    speechQueue = [];
+    speechBusy = false;
+    window.speechSynthesis.cancel();
 }
-// 頁面切換
+// 頁面切換先清後台線程
 function switchPage(pageId) {
     cleanupAllListeners();
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(pageId).classList.add("active");
     currentView = pageId;
 }
-// 顯示彈窗提示
 function showToast(text) {
     const toast = document.createElement("div");
     toast.style.position="fixed"; toast.style.bottom="30px"; toast.style.left="50%";
@@ -569,8 +552,7 @@ function showToast(text) {
     setTimeout(()=>toast.remove(),2500);
 }
 
-// ====================== 音頻系統 最大音量6倍增益 ======================
-// 初始化Web Audio放大系統
+// ====================== 音頻系統 加佇列鎖防卡死 ======================
 function initAudioSystem() {
     if(audioContext) return;
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -578,30 +560,28 @@ function initAudioSystem() {
     gainNode.gain.value = VOICE_GAIN_RATIO;
     gainNode.connect(audioContext.destination);
 }
-// 解鎖iOS語音（首次點擊畫面激活）
 function unlockSpeech() {
     initAudioSystem();
     if(audioContext.state === "suspended") audioContext.resume();
 }
-// 粵語文字轉語音排隊播放
 function speak(text) {
     unlockSpeech();
     speechQueue.push(text);
     runSpeechQueue();
 }
-function runSpeechQueue() {
-    if(speechQueue.length === 0) return;
-    const utter = new SpeechSynthesisUtterance(speechQueue[0]);
+async function runSpeechQueue() {
+    if(speechBusy || speechQueue.length === 0) return;
+    speechBusy = true;
+    const utter = new SpeechSynthesisUtterance(speechQueue.shift());
     utter.lang = "zh-HK";
     utter.rate = 0.98;
-    utter.volume = 1.0; // 原生播放器鎖滿音量
+    utter.volume = 1.0;
     utter.onend = ()=>{
-        speechQueue.shift();
-        runSpeechQueue();
+        speechBusy = false;
+        setTimeout(runSpeechQueue,100);
     }
     window.speechSynthesis.speak(utter);
 }
-// 播放音頻檔（錄音）滿音量+6倍放大
 async function playAudioBlob(blob) {
     unlockSpeech();
     const buffer = await audioContext.decodeAudioData(await blob.arrayBuffer());
@@ -610,11 +590,11 @@ async function playAudioBlob(blob) {
     src.connect(gainNode);
     src.start();
 }
-// 錄音麥克風輸入鎖滿音量
+// 錄音加獨佔鎖，同一時間只可以有一個錄音進程
 async function startRecord() {
+    if(isRecording) return;
     try {
         const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-        // 麥克風輸入強制滿格
         stream.getAudioTracks().forEach(track=>{
             if(track.applyConstraints) track.applyConstraints({volume:1.0});
         });
@@ -622,30 +602,31 @@ async function startRecord() {
         audioChunks = [];
         mediaRecorder.ondataavailable = e=>audioChunks.push(e.data);
         mediaRecorder.start();
+        isRecording = true;
         showToast("🎤 正在錄音，放開發送");
     } catch(err) {
         showToast("❌ 無法開啟麥克風，請開啟權限");
     }
 }
 function stopRecord() {
-    if(!mediaRecorder) return;
+    if(!isRecording || !mediaRecorder) return;
     mediaRecorder.stop();
     mediaRecorder.stream.getTracks().forEach(t=>t.stop());
     mediaRecorder.onstop = async ()=>{
         const blob = new Blob(audioChunks, {type:"audio/webm"});
         await playAudioBlob(blob);
-        // 這裡可加發送到Firebase邏輯
         showToast("✅ 錄音播放完畢");
+        mediaRecorder = null;
+        isRecording = false;
     }
 }
 
-// ====================== 可拖曳浮動按鈕系統 ======================
+// ====================== 可拖曳浮動按鈕 拖曳節流防卡 ======================
 function initDraggableButtons() {
     const btns = ["float-voice-btn","float-announce-btn","float-msg-btn"];
     btns.forEach(id=>{
         const el = document.getElementById(id);
         const storageKey = `float_btn_${id}_pos`;
-        // 讀取本地儲存位置
         const saved = localStorage.getItem(storageKey);
         if(saved) {
             const pos = JSON.parse(saved);
@@ -675,13 +656,12 @@ function initDraggableButtons() {
             el.style.left = `${elStartX + dx}px`;
             el.style.top = `${elStartY + dy}px`;
             el.style.right = "auto";
-        }, 30);
+        }, 300);
         const dragEnd = ()=>{
             document.removeEventListener("mousemove", dragMove);
             document.removeEventListener("touchmove", dragMove);
             document.removeEventListener("mouseup", dragEnd);
             document.removeEventListener("touchend", dragEnd);
-            // 儲存位置
             localStorage.setItem(storageKey, JSON.stringify({
                 left: el.style.left,
                 top: el.style.top
@@ -692,7 +672,7 @@ function initDraggableButtons() {
     })
 }
 
-// ====================== 司機端數據同步 5秒心跳 ======================
+// ====================== 司機同步 5秒輕量心跳 ======================
 function syncDriverToDB() {
     if(!driverData.plate || !driverData.isActive) return;
     const route = driverData.mode === "busy" ? COORDS_BUSY : COORDS_NORMAL;
@@ -711,39 +691,30 @@ function syncDriverToDB() {
         isFull: driverData.isFull,
         isActive: true,
         directionText: driverData.direction === "toYuenlong" ? "往元朗" : "往大棠",
-        lastUpdate: Date.now() // 改用本地時間，消除伺服器時差問題
+        lastUpdate: Date.now()
     };
-    // 改用update增量寫入，唔覆蓋完整節點，解決乘客看不到車
-    db.ref(`van/active_buses/${driverData.plate}`).update(data)
-    .catch(err=>console.log("同步錯誤",err));
+    db.ref(`van/active_buses/${driverData.plate}`).update(data).catch(err=>console.log("同步錯誤",err));
 }
-// 開啟心跳5秒一次
 function startHeartbeat() {
     if(heartbeatTimer) return;
-    syncDriverToDB(); // 開當值即時同步一次，唔等5秒
-    heartbeatTimer = setInterval(()=>{
-        syncDriverToDB();
-    }, HEARTBEAT_INTERVAL);
+    syncDriverToDB();
+    heartbeatTimer = setInterval(()=>syncDriverToDB(), HEARTBEAT_INTERVAL);
 }
 function stopHeartbeat() {
     if(heartbeatTimer) {
         clearInterval(heartbeatTimer);
         heartbeatTimer = null;
     }
-    // 停止當值標記離線
-    if(driverData.plate) {
-        db.ref(`van/active_buses/${driverData.plate}`).update({isActive:false});
-    }
+    if(driverData.plate) db.ref(`van/active_buses/${driverData.plate}`).update({isActive:false});
 }
 
-// ====================== GPS高精準定位報站 100米門檻 ======================
+// ====================== GPS定位 限定局部運算減少CPU負荷 ======================
 function startGPS() {
     if(gpsWatchId) return;
     driverData.isActive = true;
     startHeartbeat();
     showToast("🟢 已開啟當值，GPS開始定位");
     speak("開始當值，GPS定位完成");
-    // GPS節流運算，每300ms先計算一次距離，防卡頓
     gpsWatchId = navigator.geolocation.watchPosition(throttle(pos=>{
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
@@ -751,7 +722,7 @@ function startGPS() {
         const stationNames = driverData.mode === "busy" ? STATION_NAMES_BUSY : STATION_NAMES_NORMAL;
         let minDist = 999999;
         let minIdx = driverData.stationIndex;
-        // 只計算前後3站，減少運算量優化流暢度
+        // 只計算前後3站，大幅減少運算量
         const startIdx = Math.max(0, driverData.stationIndex - 3);
         const endIdx = Math.min(route.length-1, driverData.stationIndex + 3);
         for(let i=startIdx; i<=endIdx; i++) {
@@ -762,9 +733,7 @@ function startGPS() {
             }
         }
         document.getElementById("stationDistance").innerText = Math.round(minDist);
-        // 100米觸發邏輯
         if(minDist <= TRIGGER_DISTANCE) {
-            // 60米內即時報站，60-100米雙重確認
             if(minDist <= 60 || minIdx === driverData.stationIndex) {
                 if(minIdx !== driverData.stationIndex) {
                     driverData.stationIndex = minIdx;
@@ -777,7 +746,6 @@ function startGPS() {
         }
     },300), err=>{
         showToast("❌ GPS定位失敗，請開啟定位權限");
-        console.log("GPS錯誤",err);
     },{enableHighAccuracy:true, maximumAge:200, timeout:3000});
 }
 function stopGPS() {
@@ -791,7 +759,7 @@ function stopGPS() {
     speak("結束當值");
 }
 
-// ====================== 乘客頁讀取在線車輛 ======================
+// ====================== 乘客車輛列表 ======================
 function loadBusList() {
     const unsub = db.ref("van/active_buses").on("value", snap=>{
         const now = Date.now();
@@ -801,7 +769,6 @@ function loadBusList() {
         let hasBus = false;
         snap.forEach(child=>{
             const bus = child.val();
-            // 8分鐘離線過濾
             if(now - bus.lastUpdate > OFFLINE_FILTER_MS || !bus.isActive) return;
             hasBus = true;
             const div = document.createElement("div");
@@ -819,34 +786,25 @@ function loadBusList() {
     activeListeners.push(unsub);
 }
 
-// ====================== 頁面按鈕綁定 ======================
+// ====================== 所有按鈕綁定 統一防抖 ======================
 function bindAllButton() {
-    // 首頁返回
+    const deb = debounce;
     document.querySelectorAll(".back-btn").forEach(btn=>{
-        btn.addEventListener("click", debounce(()=>{
-            switchPage("page-home");
-        }));
+        btn.addEventListener("click", deb(()=>switchPage("page-home")));
     })
-    // 登入彈窗模擬
-    document.getElementById("btnDriverPassLogin").addEventListener("click", debounce(()=>{
+    document.getElementById("btnDriverPassLogin").addEventListener("click", deb(()=>{
         driverData.plate = "WIN神 CG 2893";
         driverData.phone = "97860187";
         switchPage("page-driver");
     }));
-    document.getElementById("btnAdminLogin").addEventListener("click", debounce(()=>{
-        showToast("管理員登入介面待開發");
-    }));
-    // 司機頁返回
-    document.getElementById("driverBackBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("btnAdminLogin").addEventListener("click", deb(()=>showToast("管理員面板開發中")));
+    document.getElementById("driverBackBtn").addEventListener("click", deb(()=>{
         stopGPS();
         switchPage("page-home");
     }));
-    // 乘客頁返回
-    document.getElementById("passengerBackBtn").addEventListener("click", debounce(()=>{
-        switchPage("page-home");
-    }));
-    // 乘客加減
-    document.getElementById("addPassenger").addEventListener("click", debounce(()=>{
+    document.getElementById("passengerBackBtn").addEventListener("click", deb(()=>switchPage("page-home")));
+    // 加減乘客
+    document.getElementById("addPassenger").addEventListener("click", deb(()=>{
         const max = driverData.carSeats;
         if(driverData.passengerCount < max) {
             driverData.passengerCount++;
@@ -855,7 +813,7 @@ function bindAllButton() {
             syncDriverToDB();
         } else showToast("已達座位上限");
     }));
-    document.getElementById("minusPassenger").addEventListener("click", debounce(()=>{
+    document.getElementById("minusPassenger").addEventListener("click", deb(()=>{
         if(driverData.passengerCount > 0) {
             driverData.passengerCount--;
             document.getElementById("passengerNum").innerText = driverData.passengerCount;
@@ -863,8 +821,8 @@ function bindAllButton() {
             syncDriverToDB();
         } else showToast("乘客數不能少於0");
     }));
-    // 上一站 下一站
-    document.getElementById("prevStation").addEventListener("click", debounce(()=>{
+    // 上下一站
+    document.getElementById("prevStation").addEventListener("click", deb(()=>{
         const maxIdx = driverData.mode === "busy" ? COORDS_BUSY.length-1 : COORDS_NORMAL.length-1;
         if(driverData.stationIndex > 0) {
             driverData.stationIndex--;
@@ -874,7 +832,7 @@ function bindAllButton() {
             syncDriverToDB();
         }
     }));
-    document.getElementById("nextStationBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("nextStationBtn").addEventListener("click", deb(()=>{
         const maxIdx = driverData.mode === "busy" ? COORDS_BUSY.length-1 : COORDS_NORMAL.length-1;
         if(driverData.stationIndex < maxIdx) {
             driverData.stationIndex++;
@@ -884,29 +842,24 @@ function bindAllButton() {
             syncDriverToDB();
         }
     }));
-    // 滿座切換
-    document.getElementById("fullSeatBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("fullSeatBtn").addEventListener("click", deb(()=>{
         driverData.isFull = !driverData.isFull;
         showToast(driverData.isFull ? "已標記滿座" : "解除滿座標記");
         syncDriverToDB();
     }));
-    // 16/19座切換
-    document.getElementById("seatSwitchBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("seatSwitchBtn").addEventListener("click", deb(()=>{
         driverData.carSeats = driverData.carSeats === 16 ? 19 : 16;
         document.getElementById("seatSwitchBtn").innerText = driverData.carSeats + "座";
-        // 人數自動裁剪
         if(driverData.passengerCount > driverData.carSeats) driverData.passengerCount = driverData.carSeats;
         document.getElementById("passengerNum").innerText = driverData.passengerCount;
         syncDriverToDB();
     }));
-    // 調頭
-    document.getElementById("turnBackBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("turnBackBtn").addEventListener("click", deb(()=>{
         driverData.direction = driverData.direction === "toYuenlong" ? "toBigTang" : "toYuenlong";
         showToast("已切換行車方向");
         syncDriverToDB();
     }));
-    // 繁忙/非繁忙切換路線
-    document.getElementById("switchRouteBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("switchRouteBtn").addEventListener("click", deb(()=>{
         driverData.mode = driverData.mode === "busy" ? "normal" : "busy";
         driverData.stationIndex = 0;
         const names = driverData.mode === "busy" ? STATION_NAMES_BUSY : STATION_NAMES_NORMAL;
@@ -915,8 +868,7 @@ function bindAllButton() {
         showToast("已切換為" + (driverData.mode === "busy" ? "繁忙16站路線" : "非繁忙35站路線"));
         syncDriverToDB();
     }));
-    // 開啟GPS當值
-    document.getElementById("startGPSBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("startGPSBtn").addEventListener("click", deb(()=>{
         if(gpsWatchId) {
             stopGPS();
             document.getElementById("startGPSBtn").innerText = "🟢 開始當值 (GPS)";
@@ -925,8 +877,7 @@ function bindAllButton() {
             document.getElementById("startGPSBtn").innerText = "🔴 結束當值 (GPS)";
         }
     }));
-    // 對講機摺疊按鈕
-    document.getElementById("foldTalkBtn").addEventListener("click", debounce(()=>{
+    document.getElementById("foldTalkBtn").addEventListener("click", deb(()=>{
         const body = document.getElementById("talkBoxBody");
         if(body.classList.contains("fold")) {
             body.classList.remove("fold");
@@ -936,31 +887,23 @@ function bindAllButton() {
             document.getElementById("foldTalkBtn").innerText = "展開";
         }
     }));
-    // 對講機錄音長按
+    // 錄音長短按分離，加錄音鎖
     const micBtn = document.getElementById("recordTalkBtn");
     micBtn.addEventListener("mousedown", startRecord);
     micBtn.addEventListener("touchstart", startRecord);
     micBtn.addEventListener("mouseup", stopRecord);
     micBtn.addEventListener("touchend", stopRecord);
-    // 浮動靜音按鈕
-    document.getElementById("float-voice-btn").addEventListener("click", debounce(()=>{
+    // 浮動靜音掣
+    document.getElementById("float-voice-btn").addEventListener("click", deb(()=>{
         if(audioContext) {
             gainNode.gain.value = gainNode.gain.value > 0 ? 0 : VOICE_GAIN_RATIO;
             showToast(gainNode.gain.value === 0 ? "🔇 已靜音所有語音" : "🔊 解除靜音，最大音量播放");
         } else showToast("請先點擊畫面解鎖語音");
     }));
-    // 浮動公告、訊息按鈕（功能框架）
-    document.getElementById("float-announce-btn").addEventListener("click", debounce(()=>{
-        showToast("🔔 公告面板開發中");
-    }));
-    document.getElementById("float-msg-btn").addEventListener("click", debounce(()=>{
-        showToast("💬 乘客訊息面板開發中");
-    }));
-    // 切換乘客頁自動讀取車輛
-    document.querySelector(".entrance-card.green-card").addEventListener("click", debounce(()=>{
-        switchPage("page-driver");
-    }));
-    document.querySelector(".entrance-card.blue-card").addEventListener("click", debounce(()=>{
+    document.getElementById("float-announce-btn").addEventListener("click", deb(()=>showToast("🔔 公告面板開發中")));
+    document.getElementById("float-msg-btn").addEventListener("click", deb(()=>showToast("💬 乘客訊息面板開發中")));
+    document.querySelector(".entrance-card.green-card").addEventListener("click", deb(()=>switchPage("page-driver")));
+    document.querySelector(".entrance-card.blue-card").addEventListener("click", deb(()=>{
         switchPage("page-passenger");
         loadBusList();
     }));
@@ -968,17 +911,17 @@ function bindAllButton() {
 
 // ====================== 系統初始化 ======================
 function initSystem() {
-    initDraggableButtons(); // 浮動按鈕拖曳初始化
-    bindAllButton(); // 綁定所有按鈕事件
-    // 適配移動裝置vh高度
+    initDraggableButtons();
+    bindAllButton();
     const setVh = ()=>{
         document.documentElement.style.setProperty("--vh", window.innerHeight / 100 + "px");
     }
     setVh();
     window.addEventListener("resize", setVh);
     window.addEventListener("orientationchange", setVh);
-    // 點擊畫面解鎖語音（iOS強制要求）
     document.body.addEventListener("click", unlockSpeech, {once:true});
+    // 頁面關閉/切換標籤強制清理所有線程，防止後台堆積
+    window.addEventListener("beforeunload", cleanupAllListeners);
 }
 window.addEventListener("DOMContentLoaded", initSystem);
 </script>
