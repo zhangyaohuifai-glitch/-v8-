@@ -113,9 +113,14 @@ html, body {
   display: flex;
   gap: 4px;
   overflow-x: auto;
-  padding: 12px 4px;
-  margin-bottom: 12px;
+  padding: 14px 8px;
+  margin: 8px 0 14px 0;
+  background: rgba(255,214,10,0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255,214,10,0.15);
   scrollbar-width: none;
+  position: relative;
+  z-index: 1;
 }
 .route-strip::-webkit-scrollbar { display: none; }
 .dot-node {
@@ -249,38 +254,41 @@ html, body {
   font-size: 14px;
 }
 
-/* ===== 浮层按钮 ===== */
-.overlay-btn {
+/* ===== 浮动可拖拽按钮 ===== */
+.float-btn {
   position: fixed;
-  right: 16px;
-  bottom: 100px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
+  border: none;
+  font-size: 22px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  cursor: pointer;
+  z-index: 50;
+  touch-action: none;
+  user-select: none;
+  transition: transform 0.1s;
+}
+.float-btn:active { transform: scale(0.92); }
+.float-btn.dragging {
+  transition: none;
+  opacity: 0.85;
+  transform: scale(1.1);
+}
+
+#float-msg-btn {
+  right: 16px;
+  top: 80px;
   background: var(--purple);
   color: #fff;
-  border: none;
-  font-size: 22px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 10;
 }
-.announce-float {
-  position: fixed;
+#floating-announce-btn {
   right: 16px;
-  bottom: 170px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  top: 20px;
   background: var(--gold);
   color: #000;
-  border: none;
-  font-size: 22px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 10;
 }
-.announce-float.has-new {
+#floating-announce-btn.has-new {
   animation: ring 1.5s infinite;
 }
 @keyframes ring {
@@ -288,22 +296,13 @@ html, body {
   25% { transform: rotate(15deg); }
   75% { transform: rotate(-15deg); }
 }
-.global-voice-btn {
-  position: fixed;
+#global-voice-btn {
   left: 16px;
-  bottom: 100px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  top: 20px;
   background: var(--green);
   color: #000;
-  border: none;
-  font-size: 22px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 10;
 }
-.global-voice-btn.muted { background: #48484a; color: #8e8e93; }
+#global-voice-btn.muted { background: #48484a; color: #8e8e93; }
 
 /* ===== 消息浮层 ===== */
 .msg-overlay {
@@ -923,9 +922,9 @@ html, body {
   </div>
 
   <!-- 浮动按钮 -->
-  <button class="overlay-btn" id="float-msg-btn" style="display:none;">💬</button>
-  <button class="announce-float" id="floating-announce-btn" style="display:none;">🔔</button>
-  <button class="global-voice-btn" id="global-voice-btn" style="display:none;">🔊</button>
+  <button class="float-btn" id="float-msg-btn" style="display:none;">💬</button>
+  <button class="float-btn" id="floating-announce-btn" style="display:none;">🔔</button>
+  <button class="float-btn" id="global-voice-btn" style="display:none;">🔊</button>
 
   <div id="toast" class="toast"></div>
 </div>
@@ -987,6 +986,7 @@ let currentBusId = null;
 let gpsWatchId = null;
 let lastGpsStationIndex = -1;
 let gpsConfirmCount = 0;
+let heartbeatTimer = null;
 
 // Firebase 监听器引用（用于清理）
 const refs = {
@@ -1568,7 +1568,7 @@ function loadBusList() {
     
     for (const plate in data) {
       const bus = data[plate];
-      if (now - (bus.lastUpdate || 0) > 120000) continue; // 超过2分钟当离线
+      if (now - (bus.lastUpdate || 0) > 300000) continue; // 超过5分钟当离线
       count++;
       html += `
         <div class="bus-card">
@@ -1921,11 +1921,11 @@ function syncDriverToDB() {
     isActive: true,
     routeMode: driverData.mode === 'busy' ? '繁忙時段' : '非繁忙',
     directionText: driverData.direction === 0 ? '往元朗' : '往大棠',
-    lastUpdate: Date.now()
+    lastUpdate: firebase.database.ServerValue.TIMESTAMP
   };
   
   const ref = db.ref('van/active_buses/' + driverData.plate);
-  ref.update(data);
+  ref.set(data);
   ref.onDisconnect().remove();
 }
 
@@ -2142,10 +2142,27 @@ document.getElementById('start-gps').addEventListener('click', () => {
   
   showToast('🟢 已開始當值，GPS追蹤中');
   speak('開始當值，GPS定位完成');
+  
+  // 启动心跳，每30秒更新一次在线状态
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  heartbeatTimer = setInterval(() => {
+    if (driverData.isActive && driverData.plate) {
+      db.ref('van/active_buses/' + driverData.plate + '/lastUpdate').set(
+        firebase.database.ServerValue.TIMESTAMP
+      );
+    }
+  }, 30000);
 });
 
 document.getElementById('stop-gps').addEventListener('click', () => {
   driverData.isActive = false;
+  
+  // 清除心跳
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  
   if (gpsWatchId) {
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
@@ -2713,6 +2730,139 @@ document.getElementById('close-announce-overlay').addEventListener('click', () =
 });
 
 // ============================================================
+//  浮動按鈕拖曳功能
+// ============================================================
+let speechUnlocked = false;
+
+function unlockSpeech() {
+  if (speechUnlocked) return;
+  if (!window.speechSynthesis) return;
+  // iOS Safari需要用户交互才能播放语音，播一个静音来解锁
+  const u = new SpeechSynthesisUtterance('');
+  u.volume = 0;
+  u.rate = 0.1;
+  window.speechSynthesis.speak(u);
+  speechUnlocked = true;
+  console.log('语音已解锁');
+  // 预热粤语语音
+  setTimeout(() => getCantoneseVoice(), 100);
+}
+
+function initDraggableButtons() {
+  const buttons = [
+    document.getElementById('global-voice-btn'),
+    document.getElementById('floating-announce-btn'),
+    document.getElementById('float-msg-btn')
+  ];
+  
+  buttons.forEach(btn => {
+    if (!btn) return;
+    
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startLeft = 0, startTop = 0;
+    let dragMoved = false;
+    
+    const storageKey = 'float_btn_pos_' + btn.id;
+    
+    // 恢复保存的位置
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const pos = JSON.parse(saved);
+        btn.style.left = pos.left + 'px';
+        btn.style.top = pos.top + 'px';
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+      } catch(e) {}
+    }
+    
+    function onStart(e) {
+      const touch = e.touches ? e.touches[0] : e;
+      isDragging = true;
+      dragMoved = false;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      
+      const rect = btn.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      btn.classList.add('dragging');
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+      btn.style.zIndex = '999';
+      
+      unlockSpeech();
+      
+      e.preventDefault();
+    }
+    
+    function onMove(e) {
+      if (!isDragging) return;
+      const touch = e.touches ? e.touches[0] : e;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) dragMoved = true;
+      
+      let newLeft = startLeft + dx;
+      let newTop = startTop + dy;
+      
+      // 边界限制
+      const maxLeft = window.innerWidth - btn.offsetWidth - 4;
+      const maxTop = window.innerHeight - btn.offsetHeight - 4;
+      newLeft = Math.max(4, Math.min(maxLeft, newLeft));
+      newTop = Math.max(4, Math.min(maxTop, newTop));
+      
+      btn.style.left = newLeft + 'px';
+      btn.style.top = newTop + 'px';
+      
+      e.preventDefault();
+    }
+    
+    function onEnd(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      btn.classList.remove('dragging');
+      btn.style.zIndex = '50';
+      
+      if (dragMoved) {
+        // 自动贴边
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const screenMid = window.innerWidth / 2;
+        
+        if (centerX < screenMid) {
+          btn.style.left = '16px';
+        } else {
+          btn.style.left = (window.innerWidth - rect.width - 16) + 'px';
+        }
+        
+        // 保存位置
+        localStorage.setItem(storageKey, JSON.stringify({
+          left: parseInt(btn.style.left),
+          top: parseInt(btn.style.top)
+        }));
+        
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+    
+    btn.addEventListener('touchstart', onStart, { passive: false });
+    btn.addEventListener('touchmove', onMove, { passive: false });
+    btn.addEventListener('touchend', onEnd);
+    btn.addEventListener('touchcancel', onEnd);
+    
+    btn.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+  });
+}
+
+// ============================================================
 //  清理 & 自動維護
 // ============================================================
 function cleanupAllListeners() {
@@ -2747,6 +2897,11 @@ function cleanupOldMessages() {
 // ============================================================
 function init() {
   initAnnounceSystem();
+  initDraggableButtons();
+  
+  // 首次点击解锁语音（iOS限制）
+  document.body.addEventListener('click', unlockSpeech, { once: true });
+  document.body.addEventListener('touchstart', unlockSpeech, { once: true });
   
   // 检查登录状态
   setTimeout(() => {
