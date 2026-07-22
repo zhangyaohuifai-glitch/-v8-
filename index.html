@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>西鐵小巴</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* 頂部標題 */
+        .header { 
+            background: #1a1a1a; 
+            padding: 16px 20px; 
+            text-align: center; 
+            border-bottom: 2px solid #ffcc00;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 { color: #ffcc00; font-size: 24px; font-weight: 800; }
+        .header .sub { color: #888; font-size: 14px; margin-top: 4px; }
+        
+        /* 登入 Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .login-overlay.active { display: flex; }
+        .login-box {
+            background: #1c1c1e;
+            border: 2px solid #ffcc00;
+            border-radius: 20px;
+            padding: 30px 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .login-box h2 { color: #ffcc00; font-size: 26px; margin-bottom: 8px; }
+        .login-box p { color: #aaa; font-size: 15px; margin-bottom: 20px; }
+        .login-box input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #2c2c2e;
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .login-box input:focus { outline: none; border-color: #ffcc00; }
+        .login-box .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #ffcc00;
+            color: #000;
+            transition: opacity 0.2s;
+        }
+        .login-box .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-box .btn-secondary {
+            background: #3a3a3c;
+            color: #fff;
+            margin-top: 10px;
+        }
+        .login-box .status {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 12px;
+            min-height: 24px;
+        }
+        .login-box .status.success { color: #30d158; }
+        .login-box .status.error { color: #ff453a; }
+        
+        /* 主畫面 */
+        .container { max-width: 480px; margin: 0 auto; padding: 16px; width: 100%; flex: 1; }
+        .card {
+            background: #1c1c1e;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #2a2a2a;
+        }
+        .card h3 { color: #ffcc00; font-size: 18px; margin-bottom: 8px; }
+        .card p { color: #ccc; font-size: 15px; line-height: 1.6; }
+        
+        .btn-main {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 14px;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: opacity 0.2s;
+        }
+        .btn-main:active { opacity: 0.7; }
+        .btn-blue { background: #0a84ff; color: #fff; }
+        .btn-red { background: #ff453a; color: #fff; }
+        .btn-green { background: #30d158; color: #000; }
+        .btn-gold { background: #ffcc00; color: #000; }
+        .btn-grey { background: #3a3a3c; color: #fff; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 4px 4px 0 0;
+        }
+        .badge-admin { background: #ffcc00; color: #000; }
+        .badge-driver { background: #ff453a; color: #fff; }
+        .badge-passenger { background: #0a84ff; color: #fff; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .user-info .email { color: #aaa; font-size: 14px; word-break: break-all; }
+        
+        .logout-btn {
+            background: none;
+            border: 1px solid #555;
+            color: #888;
+            padding: 6px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover { border-color: #ff453a; color: #ff453a; }
+        
+        .hidden { display: none !important; }
+        .mt-8 { margin-top: 8px; }
+        .mb-8 { margin-bottom: 8px; }
+        .text-center { text-align: center; }
+        .text-gold { color: #ffcc00; }
+        .text-grey { color: #888; }
+        
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c2c2e;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            max-width: 90%;
+            border: 1px solid #444;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<!-- 頂部 -->
+<div class="header">
+    <h1>🚐 西鐵小巴</h1>
+    <div class="sub">即時追蹤 · 自動報站</div>
+</div>
+
+<!-- 登入畫面 -->
+<div class="login-overlay active" id="loginOverlay">
+    <div class="login-box">
+        <h2>🔐 登入</h2>
+        <p>輸入電郵，收連結即登入</p>
+        <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+        <button class="btn" id="loginBtn">📧 發送登入連結</button>
+        <div class="status" id="loginStatus"></div>
+        <button class="btn btn-secondary" id="skipLoginBtn">👀 繼續瀏覽（唔登入）</button>
+    </div>
+</div>
+
+<!-- 主內容 -->
+<div class="container" id="mainApp">
+    
+    <!-- 用戶資訊 -->
+    <div class="card" id="userCard">
+        <div class="user-info">
+            <div>
+                <span class="badge" id="roleBadge">未登入</span>
+                <span class="email" id="userEmail">—</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn">🚪 登出</button>
+        </div>
+    </div>
+    
+    <!-- 功能按鈕 -->
+    <button class="btn-main btn-blue" id="btnPassenger">🧍 乘客入口</button>
+    <button class="btn-main btn-red" id="btnDriver">🚏 司機入口</button>
+    <button class="btn-main btn-gold hidden" id="btnAdmin">👑 總管後台</button>
+    
+    <!-- 車輛列表（乘客睇車） -->
+    <div class="card hidden" id="busListCard">
+        <h3>🚐 線上車輛</h3>
+        <div id="busList" style="color:#aaa; font-size:15px;">載入中...</div>
+    </div>
+    
+    <!-- 司機面板（司機專用） -->
+    <div class="card hidden" id="driverPanel">
+        <h3>🚏 司機控制</h3>
+        <div id="driverInfo" style="color:#aaa; font-size:15px; margin-bottom:10px;">未設定車牌</div>
+        <input type="text" id="plateInput" placeholder="輸入車牌 (e.g. AB1234)" style="width:100%; padding:14px; border-radius:10px; border:1px solid #333; background:#2c2c2e; color:#fff; font-size:16px; margin-bottom:10px;">
+        <button class="btn-main btn-green" id="startDutyBtn">🟢 開始當值</button>
+        <button class="btn-main btn-grey hidden" id="stopDutyBtn">🔴 停止當值</button>
+        <div id="dutyStatus" style="color:#aaa; font-size:14px; margin-top:8px;">未當值</div>
+    </div>
+    
+    <!-- 管理後台（管理員專用） -->
+    <div class="card hidden" id="adminPanel">
+        <h3>🛡️ 總管後台</h3>
+        <p style="color:#aaa; font-size:14px;">管理員專用功能</p>
+        <div id="adminContent" style="color:#aaa; font-size:14px; margin-top:8px;">載入中...</div>
+    </div>
+    
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  西鐵小巴 - 電郵登入完整版
+//  功能：電郵無密碼登入、角色區分、車輛追蹤
+// ============================================================
+
+// ---------- Firebase 設定 ----------
+const firebaseConfig = {
+    apiKey: "AIzaSyCnToMYsM7pIGeGHLt5xFbQfT5RAIWzTQA",
+    authDomain: "van-v9-41439.firebaseapp.com",
+    databaseURL: "https://van-v9-41439-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "van-v9-41439",
+    storageBucket: "van-v9-41439.firebasestorage.app",
+    messagingSenderId: "434506286219",
+    appId: "1:434506286219:web:00a57d319da5c6cc4fc08e"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// ---------- 全域變數 ----------
+let currentUser = { uid: null, email: null, role: 'passenger' };
+let driverData = { plate: null, isActive: false, stationIndex: 0, passengerCount: 0 };
+let busListRef = null;
+
+// ---------- DOM 元素 ----------
+const loginOverlay = document.getElementById('loginOverlay');
+const loginEmail = document.getElementById('loginEmail');
+const loginBtn = document.getElementById('loginBtn');
+const loginStatus = document.getElementById('loginStatus');
+const skipLoginBtn = document.getElementById('skipLoginBtn');
+
+const mainApp = document.getElementById('mainApp');
+const userEmail = document.getElementById('userEmail');
+const roleBadge = document.getElementById('roleBadge');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const btnPassenger = document.getElementById('btnPassenger');
+const btnDriver = document.getElementById('btnDriver');
+const btnAdmin = document.getElementById('btnAdmin');
+
+const busListCard = document.getElementById('busListCard');
+const busList = document.getElementById('busList');
+
+const driverPanel = document.getElementById('driverPanel');
+const driverInfo = document.getElementById('driverInfo');
+const plateInput = document.getElementById('plateInput');
+const startDutyBtn = document.getElementById('startDutyBtn');
+const stopDutyBtn = document.getElementById('stopDutyBtn');
+const dutyStatus = document.getElementById('dutyStatus');
+
+const adminPanel = document.getElementById('adminPanel');
+const adminContent = document.getElementById('adminContent');
+
+// ---------- Toast ----------
+let toastTimer = null;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ---------- 取得用戶 IP ----------
+async function getUserIP() {
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip || '未能獲取';
+    } catch { return '未能獲取'; }
+}
+
+// ---------- 收集裝置資訊 ----------
+function collectDeviceInfo() {
+    try {
+        return {
+            device: navigator.userAgent || 'Unknown',
+            screen: `${window.screen.width}x${window.screen.height}`,
+            language: navigator.language || 'Unknown',
+            timestamp: Date.now()
+        };
+    } catch { return { device: 'Unknown', timestamp: Date.now() }; }
+}
+
+// ---------- 記錄登入 ----------
+async function recordLogin(uid, email, role) {
+    const ip = await getUserIP();
+    const device = collectDeviceInfo();
+    try {
+        await db.ref('login_logs').push({
+            uid: uid,
+            email: email,
+            role: role,
+            ip: ip,
+            device: device.device,
+            loginTime: Date.now(),
+            status: 'active'
+        });
+        console.log('✅ 已記錄登入');
+    } catch (e) { console.warn('記錄登入失敗:', e); }
+}
+
+// ---------- 記錄登出 ----------
+async function recordLogout(uid, email, role) {
+    try {
+        await db.ref('logout_logs').push({
+            uid: uid,
+            email: email,
+            role: role,
+            logoutTime: Date.now()
+        });
+        console.log('✅ 已記錄登出');
+    } catch (e) { console.warn('記錄登出失敗:', e); }
+}
+
+// ---------- 檢查管理員 ----------
+async function checkAdmin(uid) {
+    try {
+        const snap = await db.ref('admins').once('value');
+        let isAdmin = false;
+        snap.forEach(child => {
+            if (child.val().uid === uid || child.val().email === currentUser.email) {
+                isAdmin = true;
+            }
+        });
+        return isAdmin;
+    } catch { return false; }
+}
+
+// ---------- 更新 UI ----------
+function updateUI() {
+    if (currentUser.uid) {
+        userEmail.textContent = currentUser.email || '已登入';
+        roleBadge.textContent = currentUser.role === 'admin' ? '👑 管理員' : 
+                               currentUser.role === 'driver' ? '🚐 司機' : '🧍 乘客';
+        roleBadge.className = 'badge ' + 
+            (currentUser.role === 'admin' ? 'badge-admin' : 
+             currentUser.role === 'driver' ? 'badge-driver' : 'badge-passenger');
+        
+        btnAdmin.classList.toggle('hidden', currentUser.role !== 'admin');
+        if (currentUser.role === 'admin') loadAdminPanel();
+        
+        // 司機面板自動載入車牌
+        if (currentUser.role === 'driver' || currentUser.role === 'admin') {
+            const saved = localStorage.getItem('driverPlate_' + currentUser.uid);
+            if (saved) {
+                plateInput.value = saved;
+                driverData.plate = saved;
+                driverInfo.textContent = '🚐 車牌: ' + saved;
+            }
+        }
+    } else {
+        userEmail.textContent = '未登入';
+        roleBadge.textContent = '👀 訪客';
+        roleBadge.className = 'badge badge-passenger';
+        btnAdmin.classList.add('hidden');
+        driverPanel.classList.add('hidden');
+        adminPanel.classList.add('hidden');
+        busListCard.classList.add('hidden');
+    }
+}
+
+// ---------- 載入車輛列表（乘客用）----------
+function loadBusList() {
+    busList.textContent = '載入中...';
+    if (busListRef) busListRef.off();
+    busListRef = db.ref('van/active_buses');
+    busListRef.on('value', snap => {
+        const data = snap.val() || {};
+        let html = '';
+        let count = 0;
+        const now = Date.now();
+        for (const plate in data) {
+            const bus = data[plate];
+            if (now - bus.lastUpdate > 30000) continue;
+            count++;
+            html += `<div style="background:#2a2a2a; border-radius:10px; padding:12px; margin-bottom:8px;">
+                <div style="font-size:18px; font-weight:700; color:#ffcc00;">🚐 ${plate}</div>
+                <div style="color:#aaa; font-size:14px;">📍 ${bus.currentStation || '未知'} · 👥 ${bus.passengerCount || 0}人</div>
+                <button class="btn-main btn-blue" style="padding:10px; font-size:16px; margin-top:6px;" data-plate="${plate}">追蹤</button>
+            </div>`;
+        }
+        busList.innerHTML = count === 0 ? '暫無活躍車輛' : html;
+        busList.querySelectorAll('[data-plate]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showToast('📡 追蹤 ' + btn.dataset.plate + ' (功能開發中)');
+            });
+        });
+    }, err => {
+        busList.textContent = '⚠️ 載入失敗';
+        console.warn('loadBusList error:', err);
+    });
+}
+
+// ---------- 管理後台 ----------
+function loadAdminPanel() {
+    adminContent.textContent = '📊 統計資料載入中...';
+    db.ref('van/active_buses').once('value', snap => {
+        const data = snap.val() || {};
+        let total = 0, online = 0;
+        const now = Date.now();
+        for (const plate in data) {
+            const bus = data[plate];
+            if (now - bus.lastUpdate < 30000) online++;
+            total++;
+        }
+        adminContent.innerHTML = `
+            <div style="display:flex; gap:12px; margin-top:8px;">
+                <div style="flex:1; background:#2a2a2a; border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:28px; font-weight:800; color:#ffcc00;">${online}</div>
+                    <div style="color:#888; font-size:13px;">線上車輛</div>
+                </div>
+                <div style="flex:1; background:#2a2a2a; border-radius:10px; padding:12px; text-align:center;">
+                    <div style="font-size:28px; font-weight:800; color:#ffcc00;">${total}</div>
+                    <div style="color:#888; font-size:13px;">總車輛</div>
+                </div>
+            </div>
+            <div style="margin-top:10px; color:#888; font-size:13px;">💡 你係管理員，可以出公告、睇日誌</div>
+        `;
+    }).catch(() => {
+        adminContent.textContent = '⚠️ 無法載入統計';
+    });
+}
+
+// ---------- 司機：開始當值 ----------
+async function startDuty() {
+    const plate = plateInput.value.trim().toUpperCase();
+    if (!plate) {
+        showToast('請輸入車牌號碼');
+        return;
+    }
+    if (!currentUser.uid) {
+        showToast('請先登入');
+        return;
+    }
+    
+    driverData.plate = plate;
+    driverData.isActive = true;
+    driverData.stationIndex = 0;
+    driverData.passengerCount = 0;
+    
+    const data = {
+        plate: plate,
+        driverUid: currentUser.uid,
+        driverEmail: currentUser.email,
+        isActive: true,
+        stationIndex: 0,
+        passengerCount: 0,
+        currentStation: '大棠黃泥墩',
+        nextStation: '大棠山路',
+        mode: 'busy',
+        direction: 0,
+        isFull: false,
+        carSeats: 16,
+        lastUpdate: Date.now()
+    };
+    
+    try {
+        await db.ref('van/active_buses/' + plate).set(data);
+        localStorage.setItem('driverPlate_' + currentUser.uid, plate);
+        driverInfo.textContent = '🚐 車牌: ' + plate + ' ✅ 當值中';
+        dutyStatus.textContent = '🟢 當值中 · 站點: 0';
+        startDutyBtn.classList.add('hidden');
+        stopDutyBtn.classList.remove('hidden');
+        showToast('✅ 已開始當值');
+        console.log('✅ 司機開始當值:', plate);
+    } catch (e) {
+        console.error('開始當值失敗:', e);
+        showToast('❌ 開始當值失敗: ' + e.message);
+    }
+}
+
+// ---------- 司機：停止當值 ----------
+async function stopDuty() {
+    if (!driverData.plate) return;
+    try {
+        await db.ref('van/active_buses/' + driverData.plate).remove();
+        driverData.isActive = false;
+        driverInfo.textContent = '🚐 車牌: ' + driverData.plate + ' ⏸️ 已停止';
+        dutyStatus.textContent = '⏸️ 已停止當值';
+        startDutyBtn.classList.remove('hidden');
+        stopDutyBtn.classList.add('hidden');
+        showToast('🔴 已停止當值');
+    } catch (e) {
+        console.error('停止當值失敗:', e);
+        showToast('❌ 停止當值失敗');
+    }
+}
+
+// ============================================================
+//  🔐 電郵登入邏輯
+// ============================================================
+
+// 檢查是否從電郵連結返回
+if (auth.isSignInWithEmailLink(window.location.href)) {
+    let email = localStorage.getItem('emailForSignIn');
+    if (!email) {
+        email = window.prompt('請輸入你嘅電郵地址以完成登入');
+    }
+    if (email) {
+        auth.signInWithEmailLink(email, window.location.href)
+            .then(async (result) => {
+                const user = result.user;
+                localStorage.removeItem('emailForSignIn');
+                // 清除 URL 參數
+                window.history.pushState({}, document.title, window.location.pathname);
+                await handleLoginSuccess(user);
+            })
+            .catch((error) => {
+                console.error('電郵登入失敗:', error);
+                showToast('❌ 登入失敗: ' + error.message);
+                loginStatus.textContent = '❌ 登入失敗，請再試一次';
+                loginStatus.className = 'status error';
+                loginBtn.disabled = false;
+                loginBtn.textContent = '📧 發送登入連結';
+            });
+    }
+}
+
+// 發送登入連結
+loginBtn.addEventListener('click', function() {
+    const email = loginEmail.value.trim();
+    if (!email || !email.includes('@')) {
+        showToast('請輸入有效嘅電郵地址');
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = '⏳ 發送中...';
+    loginStatus.textContent = '⏳ 發送中...';
+    loginStatus.className = 'status';
+    
+    const actionCodeSettings = {
+        url: window.location.href,
+        handleCodeInApp: true
+    };
+    
+    auth.sendSignInLinkToEmail(email, actionCodeSettings)
+        .then(() => {
+            loginStatus.textContent = '✅ 已發送到 ' + email + '，請檢查電郵';
+            loginStatus.className = 'status success';
+            localStorage.setItem('emailForSignIn', email);
+            showToast('📧 已發送登入連結');
+            loginBtn.textContent = '✅ 已發送';
+        })
+        .catch((error) => {
+            console.error('發送失敗:', error);
+            loginStatus.textContent = '❌ 發送失敗: ' + error.message;
+            loginStatus.className = 'status error';
+            showToast('❌ 發送失敗');
+            loginBtn.disabled = false;
+            loginBtn.textContent = '📧 發送登入連結';
+        });
+});
+
+// 處理登入成功
+async function handleLoginSuccess(user) {
+    const uid = user.uid;
+    const email = user.email;
+    
+    // 檢查是否管理員
+    let role = 'passenger';
+    try {
+        const adminSnap = await db.ref('admins').once('value');
+        adminSnap.forEach(child => {
+            if (child.val().uid === uid || child.val().email === email) {
+                role = 'admin';
+            }
+        });
+    } catch (e) { console.warn('檢查管理員失敗:', e); }
+    
+    currentUser.uid = uid;
+    currentUser.email = email;
+    currentUser.role = role;
+    
+    // 儲存用戶資料
+    try {
+        await db.ref('users/' + uid).set({
+            email: email,
+            role: role,
+            lastLogin: Date.now()
+        });
+    } catch (e) { console.warn('儲存用戶資料失敗:', e); }
+    
+    // 記錄登入
+    await recordLogin(uid, email, role);
+    
+    // 關閉登入畫面
+    loginOverlay.classList.remove('active');
+    loginBtn.disabled = false;
+    loginBtn.textContent = '📧 發送登入連結';
+    
+    updateUI();
+    showToast('👋 歡迎 ' + (email || ''));
+    
+    // 如果係管理員，載入後台
+    if (role === 'admin') {
+        loadAdminPanel();
+    }
+}
+
+// ---------- 監聽登入狀態 ----------
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // 用戶已登入，但我們需要確保 currentUser 有資料
+        if (!currentUser.uid) {
+            // 嘗試從 database 讀取角色
+            try {
+                const snap = await db.ref('users/' + user.uid).once('value');
+                const data = snap.val();
+                if (data) {
+                    currentUser.uid = user.uid;
+                    currentUser.email = data.email || user.email;
+                    currentUser.role = data.role || 'passenger';
+                    loginOverlay.classList.remove('active');
+                    updateUI();
+                    if (currentUser.role === 'admin') loadAdminPanel();
+                } else {
+                    // 新用戶，但應該已經被 handleLoginSuccess 處理
+                    // 如果到這裡，可能係異常狀態
+                    console.warn('用戶資料不完整，嘗試重新登入');
+                }
+            } catch (e) {
+                console.warn('讀取用戶資料失敗:', e);
+            }
+        }
+    } else {
+        // 未登入
+        currentUser = { uid: null, email: null, role: 'passenger' };
+        loginOverlay.classList.add('active');
+        updateUI();
+        // 仍然可以睇車
+        loadBusList();
+    }
+});
+
+// ---------- 登出 ----------
+logoutBtn.addEventListener('click', function() {
+    if (currentUser.uid) {
+        recordLogout(currentUser.uid, currentUser.email, currentUser.role);
+    }
+    auth.signOut().catch(() => {});
+    currentUser = { uid: null, email: null, role: 'passenger' };
+    loginOverlay.classList.add('active');
+    updateUI();
+    showToast('已登出');
+});
+
+// ---------- 跳過登入（訪客模式） ----------
+skipLoginBtn.addEventListener('click', function() {
+    loginOverlay.classList.remove('active');
+    showToast('👀 訪客模式，只可以睇車');
+    loadBusList();
+});
+
+// ---------- 功能按鈕 ----------
+btnPassenger.addEventListener('click', function() {
+    busListCard.classList.remove('hidden');
+    driverPanel.classList.add('hidden');
+    adminPanel.classList.add('hidden');
+    loadBusList();
+    showToast('🧍 乘客模式');
+});
+
+btnDriver.addEventListener('click', function() {
+    if (!currentUser.uid) {
+        showToast('請先登入');
+        return;
+    }
+    busListCard.classList.add('hidden');
+    adminPanel.classList.add('hidden');
+    driverPanel.classList.remove('hidden');
+    // 如果已經有儲存車牌，自動填上
+    const saved = localStorage.getItem('driverPlate_' + currentUser.uid);
+    if (saved) {
+        plateInput.value = saved;
+        driverData.plate = saved;
+        driverInfo.textContent = '🚐 車牌: ' + saved;
+    }
+    showToast('🚏 司機模式');
+});
+
+btnAdmin.addEventListener('click', function() {
+    if (currentUser.role !== 'admin') {
+        showToast('權限不足');
+        return;
+    }
+    busListCard.classList.add('hidden');
+    driverPanel.classList.add('hidden');
+    adminPanel.classList.remove('hidden');
+    loadAdminPanel();
+    showToast('👑 管理後台');
+});
+
+// ---------- 司機控制 ----------
+startDutyBtn.addEventListener('click', startDuty);
+stopDutyBtn.addEventListener('click', stopDuty);
+
+// ---------- 初始化 ----------
+updateUI();
+
+// 如果已登入，關閉登入畫面
+if (auth.currentUser) {
+    // 但需要等待 onAuthStateChanged 處理
+}
+
+console.log('✅ 西鐵小巴 電郵登入版 已啟動');
+console.log('📧 支援無密碼電郵登入');
+console.log('👀 訪客可睇車，登入後可用司機功能');
+</script>
+
+</body>
+</html>
